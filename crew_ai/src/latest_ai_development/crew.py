@@ -113,6 +113,7 @@ class LatestAiDevelopment():
         """Initial query understanding and research planning."""
         return Task(
             config=self.tasks_config['discovery_task'],
+            context=[]
         )
 
     @task
@@ -120,6 +121,7 @@ class LatestAiDevelopment():
         """Validate source credibility before processing."""
         return Task(
             config=self.tasks_config['source_validation_task'],
+            context=[]
         )
 
     @task
@@ -127,6 +129,7 @@ class LatestAiDevelopment():
         """Document extraction and parsing."""
         return Task(
             config=self.tasks_config['literature_mining_task'],
+            context=[]
         )
 
     @task
@@ -134,6 +137,7 @@ class LatestAiDevelopment():
         """Verify and cross-reference gathered data."""
         return Task(
             config=self.tasks_config['source_verification_task'],
+            context=[]
         )
 
     @task
@@ -141,6 +145,7 @@ class LatestAiDevelopment():
         """Extract claims from documents."""
         return Task(
             config=self.tasks_config['claim_extraction_task'],
+            context=[]
         )
 
     @task
@@ -148,6 +153,7 @@ class LatestAiDevelopment():
         """Critically evaluate research methodologies."""
         return Task(
             config=self.tasks_config['methodology_review_task'],
+            context=[]
         )
 
     @task
@@ -155,6 +161,7 @@ class LatestAiDevelopment():
         """Cross-verify claims across multiple sources."""
         return Task(
             config=self.tasks_config['cross_reference_task'],
+            context=[]
         )
 
     @task
@@ -162,6 +169,7 @@ class LatestAiDevelopment():
         """Rate evidence strength and reliability."""
         return Task(
             config=self.tasks_config['evidence_evaluation_task'],
+            context=[]
         )
 
     @task
@@ -169,6 +177,7 @@ class LatestAiDevelopment():
         """Validate citations and build citation network."""
         return Task(
             config=self.tasks_config['citation_validation_task'],
+            context=[]
         )
 
     @task
@@ -176,6 +185,7 @@ class LatestAiDevelopment():
         """Analyze insights and synthesize findings."""
         return Task(
             config=self.tasks_config['deep_analysis_task'],
+            context=[]
         )
 
     @task
@@ -183,6 +193,7 @@ class LatestAiDevelopment():
         """Perform final quality check before report generation."""
         return Task(
             config=self.tasks_config['quality_assurance_task'],
+            context=[]
         )
 
     @task
@@ -190,6 +201,7 @@ class LatestAiDevelopment():
         """Conduct targeted additional research if gaps identified."""
         return Task(
             config=self.tasks_config['iterative_refinement_task'],
+            context=[]
         )
 
     @task
@@ -197,7 +209,8 @@ class LatestAiDevelopment():
         """Generate final research report."""
         return Task(
             config=self.tasks_config['report_generation_task'],
-            output_file='research_report.md'
+            output_file='research_report.md',
+            context=[]
         )
 
 
@@ -209,12 +222,7 @@ class LatestAiDevelopment():
             tasks=self.tasks,
             process=Process.sequential,
             verbose=True,
-            # Knowledge Sources Configuration
-            knowledge_sources=[
-                TextFileKnowledgeSource(
-                    file_paths=["data/user_preference.txt"]
-                )
-            ],
+            memory=True,  # Enable Memory (Short-term, Long-term, Entity/Graph)
             embedder={
                 "provider": "openai",
                 "config": {"model": "text-embedding-3-small"}
