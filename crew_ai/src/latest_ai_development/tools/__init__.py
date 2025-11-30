@@ -8,6 +8,9 @@ __all__ = [
     # Ingestion tools
     'PDFParserTool',
     'WebScraperTool',
+    'SerperSearchTool',
+    'EnhancedFirecrawlTool',
+    'EnhancedYouTubeSearchTool',
     
     # Analysis tools
     'ClaimExtractorTool',

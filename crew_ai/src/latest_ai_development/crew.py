@@ -6,6 +6,9 @@ from typing import List
 # Import custom tools
 from .tools.ingestion.pdf_parser import PDFParserTool
 from .tools.ingestion.web_scraper import WebScraperTool
+from .tools.ingestion.advanced_search import SerperSearchTool
+from .tools.ingestion.firecrawl_scraper import EnhancedFirecrawlTool
+from .tools.ingestion.youtube_search import EnhancedYouTubeSearchTool
 from .tools.analysis.claim_extractor import ClaimExtractorTool
 from .tools.output.report_generator import ReportGeneratorTool
 
@@ -22,6 +25,7 @@ class LatestAiDevelopment():
         """Research orchestrator and synthesis lead."""
         return Agent(
             config=self.agents_config['research_lead'],
+            tools=[SerperSearchTool()],  # Add search capability
             verbose=True,
             allow_delegation=False
         )
@@ -31,7 +35,13 @@ class LatestAiDevelopment():
         """Literature mining and document analysis specialist."""
         return Agent(
             config=self.agents_config['literature_miner'],
-            tools=[PDFParserTool(), WebScraperTool(), ClaimExtractorTool()],
+            tools=[
+                PDFParserTool(),
+                WebScraperTool(),
+                EnhancedFirecrawlTool(),  # Advanced web scraping with fallback
+                EnhancedYouTubeSearchTool(),  # YouTube video search
+                ClaimExtractorTool()
+            ],
             verbose=True
         )
 
@@ -101,6 +111,13 @@ class LatestAiDevelopment():
         )
 
     @task
+    def source_validation_task(self) -> Task:
+        """Validate source credibility before processing."""
+        return Task(
+            config=self.tasks_config['source_validation_task'],
+        )
+
+    @task
     def literature_mining_task(self) -> Task:
         """Document extraction and parsing."""
         return Task(
@@ -112,28 +129,6 @@ class LatestAiDevelopment():
         """Extract claims from documents."""
         return Task(
             config=self.tasks_config['claim_extraction_task'],
-        )
-
-    @task
-    def deep_analysis_task(self) -> Task:
-        """Analyze insights and synthesize findings."""
-        return Task(
-            config=self.tasks_config['deep_analysis_task'],
-        )
-
-    @task
-    def report_generation_task(self) -> Task:
-        """Generate final research report."""
-        return Task(
-            config=self.tasks_config['report_generation_task'],
-            output_file='research_report.md'
-        )
-
-    @task
-    def source_validation_task(self) -> Task:
-        """Validate source credibility before processing."""
-        return Task(
-            config=self.tasks_config['source_validation_task'],
         )
 
     @task
@@ -165,6 +160,13 @@ class LatestAiDevelopment():
         )
 
     @task
+    def deep_analysis_task(self) -> Task:
+        """Analyze insights and synthesize findings."""
+        return Task(
+            config=self.tasks_config['deep_analysis_task'],
+        )
+
+    @task
     def quality_assurance_task(self) -> Task:
         """Perform final quality check before report generation."""
         return Task(
@@ -176,6 +178,14 @@ class LatestAiDevelopment():
         """Conduct targeted additional research if gaps identified."""
         return Task(
             config=self.tasks_config['iterative_refinement_task'],
+        )
+
+    @task
+    def report_generation_task(self) -> Task:
+        """Generate final research report."""
+        return Task(
+            config=self.tasks_config['report_generation_task'],
+            output_file='research_report.md'
         )
 
 
