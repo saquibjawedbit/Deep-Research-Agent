@@ -177,9 +177,19 @@ async def stream_research(
             # Build crew with callbacks
             crew = crew_instance.crew()
             
+            # Create a synchronous wrapper for the async callback
+            # CrewAI calls callbacks synchronously, so we need to schedule the coroutine properly
+            def sync_callback_wrapper(output):
+                """Synchronous wrapper that schedules the async callback in the event loop."""
+                try:
+                    # Schedule the coroutine in the running event loop
+                    asyncio.run_coroutine_threadsafe(task_progress_callback(output), loop)
+                except Exception as e:
+                    print(f"Error in callback: {e}")
+            
             # Manually add callbacks to tasks (CrewAI will use these)
             for task in crew.tasks:
-                task.callback = lambda output: asyncio.create_task(task_progress_callback(output))
+                task.callback = sync_callback_wrapper
             
             # Run the crew in executor to avoid blocking
             await status_queue.put({
