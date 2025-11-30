@@ -16,6 +16,11 @@ interface StatusUpdate {
   message: string;
   agent?: string;
   result?: string;
+  task?: string;
+  description?: string;
+  tool?: string;
+  progress?: number;
+  details?: string;
 }
 
 export default function Home() {
@@ -279,16 +284,39 @@ export default function Home() {
               {loading && currentStatus && (
                 <div className="flex gap-3 animate-slide-up-fade">
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center flex-shrink-0 animate-glow-pulse">
-                    <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                    </svg>
+                    {currentStatus.type === 'system' || currentStatus.type === 'started' ? (
+                      <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    ) : currentStatus.type === 'thinking' ? (
+                      <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      </svg>
+                    ) : currentStatus.type === 'tool_start' || currentStatus.type === 'action' ? (
+                      <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    ) : currentStatus.type === 'task_completed' || currentStatus.type === 'step_complete' ? (
+                      <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    )}
                   </div>
-                  <div className="glass-morphism bg-gray-900/50 rounded-2xl px-5 py-3 max-w-3xl">
+                  <div className="glass-morphism bg-gray-900/50 rounded-2xl px-5 py-3 max-w-3xl flex-1">
                     <div className="space-y-2">
                       {currentStatus.agent && (
                         <div className="flex items-center gap-2">
                           <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
                           <span className="text-xs font-semibold text-purple-400">{currentStatus.agent}</span>
+                          {currentStatus.task && (
+                            <span className="text-xs text-gray-500">• {currentStatus.task}</span>
+                          )}
                         </div>
                       )}
                       <div className="flex items-center gap-3">
@@ -299,6 +327,23 @@ export default function Home() {
                         </div>
                         <span className="text-sm text-gray-300">{currentStatus.message}</span>
                       </div>
+                      {currentStatus.progress !== undefined && (
+                        <div className="mt-2">
+                          <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
+                            <span>Research Progress</span>
+                            <span>{currentStatus.progress}%</span>
+                          </div>
+                          <div className="w-full bg-gray-800 rounded-full h-1.5">
+                            <div
+                              className="bg-gradient-to-r from-purple-500 to-blue-500 h-1.5 rounded-full transition-all duration-500"
+                              style={{ width: `${currentStatus.progress}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
+                      {currentStatus.description && (
+                        <p className="text-xs text-gray-500 mt-1">{currentStatus.description}</p>
+                      )}
                     </div>
                   </div>
                 </div>
