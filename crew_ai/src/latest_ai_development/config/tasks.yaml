@@ -5,8 +5,8 @@ discovery_task:
     Analyze the research query: "{query}"
     
     Break down the query into specific research questions, identify key concepts,
-    and determine the most relevant sources to investigate. Create a research plan
-    that outlines which documents to prioritize and what claims to look for.
+    and determine the most relevant sources to investigate. Create a comprehensive research plan
+    that outlines which documents to prioritize and what key insights to look for.
     
     Consider the date range ({start_date} to {end_date}) and source types: {sources}
   expected_output: >
@@ -40,91 +40,68 @@ literature_mining_task:
 
 claim_extraction_task:
   description: >
-    Extract factual claims from the processed documents.
+    Extract key insights, arguments, and data from the processed documents.
     
     Analyze each document's content and identify:
-    - Numerical claims (performance metrics, percentages, measurements)
-    - Comparative claims (better than, faster than, etc.)
-    - Experimental results and findings
-    - Theoretical assertions
+    - Key arguments and theoretical positions
+    - Empirical findings and statistical data
+    - Methodological innovations
+    - Contradictions or agreements with other sources
     
-    For each claim, capture:
-    - The exact claim text with context
-    - Claim type and entities involved
+    For each insight, capture:
+    - The exact text with context
+    - Type of insight (empirical, theoretical, methodological)
     - Provenance (source, page, section)
-    - Any metrics or numerical values
   expected_output: >
-    A list of extracted claims with full provenance:
-    - Claim ID and text
-    - Claim type (numerical, comparative, experimental, theoretical)
+    A list of extracted insights with full provenance:
+    - Insight ID and text
+    - Insight type
     - Source document and location
-    - Entities and metrics
     - Context from surrounding text
-    Format as JSON list of Claim objects
+    Format as JSON list of Insight objects
   agent: literature_miner
 
 fact_checking_task:
   description: >
-    Verify the extracted claims against external sources.
+    Analyze the extracted insights to identify trends, patterns, and underlying themes.
     
-    For each claim:
-    1. Generate appropriate search queries
-    2. Search academic databases (Semantic Scholar, etc.)
-    3. Find supporting or contradicting evidence
-    4. Assign confidence levels based on evidence quality and quantity
-    
-    Confidence levels:
-    - VERIFIED: Strong supporting evidence from multiple sources
-    - PARTIALLY_VERIFIED: Some supporting evidence, but limited
-    - CONTRADICTED: Evidence contradicts the claim
-    - UNKNOWN: Insufficient evidence to verify
+    Synthesize the information to answer the research questions.
+    1. Identify consensus and dissensus among sources
+    2. Connect dots between disparate pieces of information
+    3. Evaluate the strength of evidence for different claims
+    4. Construct a coherent narrative or argument
   expected_output: >
-    Updated claims with verification results:
-    - Confidence level for each claim
-    - List of supporting/contradicting evidence
-    - Evidence sources and relevance scores
-    - Verification notes and methodology
-    Format as JSON list of verified Claim objects
-  agent: claim_verifier
+    A synthesized analysis of the topic including:
+    - Key themes and patterns
+    - Areas of agreement and disagreement
+    - Critical evaluation of the evidence
+    - Strategic insights and implications
+    Format as a structured Analysis object
+  agent: senior_analyst
 
 report_generation_task:
   description: >
     Create a comprehensive research report synthesizing all findings.
     
     The report should include:
-    1. Executive Summary (2-3 paragraphs)
-       - Overview of research question
-       - Key findings and conclusions
-       - Confidence in findings
+    1. Executive Summary
+       - High-level overview and strategic takeaways
     
-    2. Research Statistics
-       - Number of documents processed
-       - Number of claims extracted and verified
-       - Breakdown by confidence level
+    2. In-Depth Analysis
+       - Detailed exploration of key themes
+       - Synthesis of evidence from multiple sources
+       - Discussion of implications
     
-    3. Claims Analysis
-       - Verified claims with evidence
-       - Partially verified claims
-       - Contradicted claims
-       - Unverified claims
-    
-    4. Source Documents
+    3. Methodology and Sources
+       - Description of the research process
        - List of all sources with metadata
-       - Links and citations
     
-    5. Provenance and Reproducibility
-       - How claims were extracted and verified
-       - Links to original sources
-    
-    Use clear, professional language. Include confidence indicators and evidence
-    for all major claims. Make the report accessible to both technical and
-    non-technical audiences.
+    Use clear, professional language. Make the report authoritative and accessible.
   expected_output: >
     A complete research report in Markdown format with:
-    - Executive summary and key findings
-    - Detailed claims analysis grouped by confidence
+    - Executive summary
+    - Deep analysis sections
     - Full source documentation
-    - Provenance information for reproducibility
     Save to file: research_report.md
   agent: report_composer
   output_file: research_report.md

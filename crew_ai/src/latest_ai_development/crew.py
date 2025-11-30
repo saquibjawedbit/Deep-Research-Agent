@@ -7,7 +7,6 @@ from typing import List
 from .tools.ingestion.pdf_parser import PDFParserTool
 from .tools.ingestion.web_scraper import WebScraperTool
 from .tools.analysis.claim_extractor import ClaimExtractorTool
-from .tools.analysis.fact_checker import FactCheckerTool
 from .tools.output.report_generator import ReportGeneratorTool
 
 
@@ -37,11 +36,10 @@ class LatestAiDevelopment():
         )
 
     @agent
-    def claim_verifier(self) -> Agent:
-        """Fact-checking and claim verification specialist."""
+    def senior_analyst(self) -> Agent:
+        """Senior data analyst and strategist."""
         return Agent(
-            config=self.agents_config['claim_verifier'],
-            tools=[FactCheckerTool()],
+            config=self.agents_config['senior_analyst'],
             verbose=True
         )
 
@@ -76,10 +74,10 @@ class LatestAiDevelopment():
         )
 
     @task
-    def fact_checking_task(self) -> Task:
-        """Verify claims against external sources."""
+    def deep_analysis_task(self) -> Task:
+        """Analyze insights and synthesize findings."""
         return Task(
-            config=self.tasks_config['fact_checking_task'],
+            config=self.tasks_config['deep_analysis_task'],
         )
 
     @task
