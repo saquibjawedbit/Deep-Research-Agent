@@ -61,7 +61,7 @@ claim_extraction_task:
     Format as JSON list of Insight objects
   agent: literature_miner
 
-fact_checking_task:
+deep_analysis_task:
   description: >
     Analyze the extracted insights to identify trends, patterns, and underlying themes.
     
