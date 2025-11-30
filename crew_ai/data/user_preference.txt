@@ -1,0 +1,13 @@
+# Research Preferences and Context
+
+This file contains context and preferences for the Deep Research Crew.
+
+## Research Focus
+- Prioritize recent developments (last 12 months)
+- Focus on technical implementation details over marketing copy
+- Verify claims with multiple sources where possible
+
+## Output Preferences
+- Clear, structured reports
+- Include code snippets where relevant
+- Cite sources with URLs

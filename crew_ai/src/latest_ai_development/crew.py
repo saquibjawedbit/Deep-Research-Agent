@@ -12,6 +12,10 @@ from .tools.ingestion.youtube_search import EnhancedYouTubeSearchTool
 from .tools.analysis.claim_extractor import ClaimExtractorTool
 from .tools.output.report_generator import ReportGeneratorTool
 
+# Import knowledge sources
+from crewai.knowledge.source.string_knowledge_source import StringKnowledgeSource
+from crewai.knowledge.source.text_file_knowledge_source import TextFileKnowledgeSource
+
 
 @CrewBase
 class LatestAiDevelopment():
@@ -197,4 +201,14 @@ class LatestAiDevelopment():
             tasks=self.tasks,
             process=Process.sequential,
             verbose=True,
+            # Knowledge Sources Configuration
+            knowledge_sources=[
+                TextFileKnowledgeSource(
+                    file_paths=["data/user_preference.txt"]
+                )
+            ],
+            embedder={
+                "provider": "openai",
+                "config": {"model": "text-embedding-3-small"}
+            }
         )
