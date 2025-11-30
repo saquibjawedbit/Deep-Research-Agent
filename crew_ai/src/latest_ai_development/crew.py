@@ -16,6 +16,27 @@ from .tools.output.report_generator import ReportGeneratorTool
 from crewai.knowledge.source.string_knowledge_source import StringKnowledgeSource
 from crewai.knowledge.source.text_file_knowledge_source import TextFileKnowledgeSource
 
+# Import Pydantic models
+from .schemas import (
+    SourceValidation,
+    SourceValidationList,
+    Insight,
+    InsightList,
+    Document,
+    DocumentList,
+    MethodologyReview,
+    MethodologyReviewList,
+    CrossReference,
+    CrossReferenceList,
+    EvidenceRating,
+    EvidenceRatingList,
+    CitationReport,
+    Analysis,
+    QualityReport,
+    RefinementReport,
+    DeepResearchReport
+)
+
 
 @CrewBase
 class LatestAiDevelopment():
@@ -121,6 +142,7 @@ class LatestAiDevelopment():
         """Validate source credibility before processing."""
         return Task(
             config=self.tasks_config['source_validation_task'],
+            output_pydantic=SourceValidationList,
             context=[]
         )
 
@@ -129,6 +151,8 @@ class LatestAiDevelopment():
         """Document extraction and parsing."""
         return Task(
             config=self.tasks_config['literature_mining_task'],
+            output_pydantic=DocumentList,
+            async_execution=True,
             context=[]
         )
 
@@ -145,6 +169,7 @@ class LatestAiDevelopment():
         """Extract claims from documents."""
         return Task(
             config=self.tasks_config['claim_extraction_task'],
+            output_pydantic=InsightList,
             context=[]
         )
 
@@ -153,6 +178,7 @@ class LatestAiDevelopment():
         """Critically evaluate research methodologies."""
         return Task(
             config=self.tasks_config['methodology_review_task'],
+            output_pydantic=MethodologyReviewList,
             context=[]
         )
 
@@ -161,6 +187,7 @@ class LatestAiDevelopment():
         """Cross-verify claims across multiple sources."""
         return Task(
             config=self.tasks_config['cross_reference_task'],
+            output_pydantic=CrossReferenceList,
             context=[]
         )
 
@@ -169,6 +196,7 @@ class LatestAiDevelopment():
         """Rate evidence strength and reliability."""
         return Task(
             config=self.tasks_config['evidence_evaluation_task'],
+            output_pydantic=EvidenceRatingList,
             context=[]
         )
 
@@ -177,6 +205,7 @@ class LatestAiDevelopment():
         """Validate citations and build citation network."""
         return Task(
             config=self.tasks_config['citation_validation_task'],
+            output_pydantic=CitationReport,
             context=[]
         )
 
@@ -185,6 +214,7 @@ class LatestAiDevelopment():
         """Analyze insights and synthesize findings."""
         return Task(
             config=self.tasks_config['deep_analysis_task'],
+            output_pydantic=Analysis,
             context=[]
         )
 
@@ -193,6 +223,7 @@ class LatestAiDevelopment():
         """Perform final quality check before report generation."""
         return Task(
             config=self.tasks_config['quality_assurance_task'],
+            output_pydantic=QualityReport,
             context=[]
         )
 
@@ -201,6 +232,7 @@ class LatestAiDevelopment():
         """Conduct targeted additional research if gaps identified."""
         return Task(
             config=self.tasks_config['iterative_refinement_task'],
+            output_pydantic=RefinementReport,
             context=[]
         )
 
@@ -209,6 +241,7 @@ class LatestAiDevelopment():
         """Generate final research report."""
         return Task(
             config=self.tasks_config['report_generation_task'],
+            output_pydantic=DeepResearchReport,
             output_file='research_report.md',
             context=[]
         )
@@ -216,15 +249,54 @@ class LatestAiDevelopment():
 
     @crew
     def crew(self) -> Crew:
-        """Creates the Deep Research Crew"""
+        """Creates the Deep Research Crew (Full Pipeline)"""
         return Crew(
             agents=self.agents,
             tasks=self.tasks,
             process=Process.sequential,
             verbose=True,
-            memory=True,  # Enable Memory (Short-term, Long-term, Entity/Graph)
+            memory=True,
             embedder={
                 "provider": "openai",
                 "config": {"model": "text-embedding-3-small"}
             }
+        )
+
+    def research_crew(self) -> Crew:
+        """Creates the Research Phase Crew"""
+        return Crew(
+            tasks=[
+                self.discovery_task(),
+                self.source_validation_task(),
+                self.literature_mining_task(),
+                self.source_verification_task(),
+                self.claim_extraction_task(),
+                self.methodology_review_task(),
+                self.cross_reference_task(),
+                self.evidence_evaluation_task(),
+                self.citation_validation_task(),
+                self.deep_analysis_task(),
+                self.quality_assurance_task()
+            ],
+            process=Process.sequential,
+            verbose=True,
+            memory=True
+        )
+
+    def refinement_crew(self) -> Crew:
+        """Creates the Refinement Phase Crew"""
+        return Crew(
+            tasks=[self.iterative_refinement_task()],
+            process=Process.sequential,
+            verbose=True,
+            memory=True
+        )
+
+    def report_crew(self) -> Crew:
+        """Creates the Reporting Phase Crew"""
+        return Crew(
+            tasks=[self.report_generation_task()],
+            process=Process.sequential,
+            verbose=True,
+            memory=True
         )

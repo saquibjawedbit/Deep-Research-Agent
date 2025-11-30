@@ -54,7 +54,42 @@ def run():
     print("\n" + "=" * 80 + "\n")
 
     try:
-        result = LatestAiDevelopment().crew().kickoff(inputs=inputs)
+        crew_instance = LatestAiDevelopment()
+        
+        # 1. Research Phase
+        print("\n🔍 Starting Phase 1: Research & Analysis...")
+        research_crew = crew_instance.research_crew()
+        research_result = research_crew.kickoff(inputs=inputs)
+        
+        quality_report = research_result.pydantic
+        quality_score = quality_report.overall_quality_score if quality_report else 0.0
+        print(f"\n📊 Quality Score: {quality_score:.2f} (Threshold: {inputs['quality_threshold']})")
+        
+        # 2. Refinement Phase (Conditional)
+        if inputs['enable_iterative_refinement'] and quality_score < inputs['quality_threshold']:
+            print("\n🔄 Quality below threshold. Starting Phase 2: Iterative Refinement...")
+            max_iterations = inputs['max_iterations']
+            current_iteration = 0
+            
+            while current_iteration < max_iterations and quality_score < inputs['quality_threshold']:
+                current_iteration += 1
+                print(f"   > Iteration {current_iteration}/{max_iterations}...")
+                
+                refinement_inputs = inputs.copy()
+                refinement_inputs['quality_report'] = quality_report.model_dump() if quality_report else {}
+                
+                refinement_crew = crew_instance.refinement_crew()
+                refinement_result = refinement_crew.kickoff(inputs=refinement_inputs)
+                
+                refinement_report = refinement_result.pydantic
+                if refinement_report:
+                    quality_score = refinement_report.updated_quality_score
+                    print(f"   > New Quality Score: {quality_score:.2f}")
+        
+        # 3. Report Generation Phase
+        print("\n📝 Starting Phase 3: Final Report Generation...")
+        report_crew = crew_instance.report_crew()
+        final_result = report_crew.kickoff(inputs=inputs)
         
         print("\n" + "=" * 80)
         print("✅ RESEARCH COMPLETE")
@@ -67,14 +102,9 @@ def run():
         print("   ✓ Evidence strength rating")
         print("   ✓ Citation validation")
         print("   ✓ Quality assurance review")
-        print("\n💡 Check the report for:")
-        print("   • Evidence quality ratings")
-        print("   • Source credibility scores")
-        print("   • Methodology assessments")
-        print("   • Cross-referenced claims")
-        print("   • Citation network")
+        print("   ✓ Conditional refinement loop")
         
-        return result
+        return final_result
     except Exception as e:
         raise Exception(f"An error occurred while running the crew: {e}")
 

@@ -191,21 +191,83 @@ async def stream_research(
             for task in crew.tasks:
                 task.callback = sync_callback_wrapper
             
-            # Run the crew in executor to avoid blocking
+            # Execute Research Phase
             await status_queue.put({
                 "type": "execution_started",
-                "message": "Beginning deep research execution...",
+                "message": "Phase 1: Research & Analysis",
                 "agent": "System"
             })
             
-            # Execute crew
-            result = await loop.run_in_executor(None, lambda: crew.kickoff(inputs=inputs))
+            research_crew = crew_instance.research_crew()
+            # Add callbacks
+            for task in research_crew.tasks:
+                task.callback = sync_callback_wrapper
+                
+            research_result = await loop.run_in_executor(None, lambda: research_crew.kickoff(inputs=inputs))
             
+            # Check Quality
+            quality_report = research_result.pydantic
+            quality_score = quality_report.overall_quality_score if quality_report else 0.0
+            
+            await status_queue.put({
+                "type": "quality_check",
+                "message": f"Quality Score: {quality_score:.2f} (Threshold: {inputs.get('quality_threshold', 0.7)})",
+                "score": quality_score,
+                "agent": "System"
+            })
+            
+            # Iterative Refinement Loop
+            if inputs.get('enable_iterative_refinement') and quality_score < inputs.get('quality_threshold', 0.7):
+                max_iterations = inputs.get('max_iterations', 2)
+                current_iteration = 0
+                
+                while current_iteration < max_iterations and quality_score < inputs.get('quality_threshold', 0.7):
+                    current_iteration += 1
+                    await status_queue.put({
+                        "type": "refinement_start",
+                        "message": f"Phase 2: Refinement Iteration {current_iteration}/{max_iterations}. Addressing gaps...",
+                        "agent": "System"
+                    })
+                    
+                    # Prepare inputs for refinement (pass the quality report details)
+                    refinement_inputs = inputs.copy()
+                    refinement_inputs['quality_report'] = quality_report.model_dump() if quality_report else {}
+                    
+                    refinement_crew = crew_instance.refinement_crew()
+                    for task in refinement_crew.tasks:
+                        task.callback = sync_callback_wrapper
+                        
+                    refinement_result = await loop.run_in_executor(None, lambda: refinement_crew.kickoff(inputs=refinement_inputs))
+                    
+                    # Update quality score (assuming refinement returns a report with updated score)
+                    # Note: Refinement task returns RefinementReport, which has updated_quality_score
+                    refinement_report = refinement_result.pydantic
+                    if refinement_report:
+                        quality_score = refinement_report.updated_quality_score
+                        await status_queue.put({
+                            "type": "refinement_complete",
+                            "message": f"Refinement complete. New Quality Score: {quality_score:.2f}",
+                            "agent": "System"
+                        })
+            
+            # Generate Final Report
+            await status_queue.put({
+                "type": "report_generation",
+                "message": "Phase 3: Generating Final Report",
+                "agent": "System"
+            })
+            
+            report_crew = crew_instance.report_crew()
+            for task in report_crew.tasks:
+                task.callback = sync_callback_wrapper
+                
+            final_result = await loop.run_in_executor(None, lambda: report_crew.kickoff(inputs=inputs))
+
             # Send completion status
             await status_queue.put({
                 "type": "completed",
                 "message": "Deep research complete! Generated comprehensive report with quality metrics.",
-                "result": str(result),
+                "result": str(final_result),
                 "agent": "System"
             })
             
