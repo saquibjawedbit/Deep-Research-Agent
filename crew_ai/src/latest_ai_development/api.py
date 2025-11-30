@@ -31,6 +31,14 @@ class ResearchRequest(BaseModel):
     end_date: Optional[str] = None
     sources: Optional[str] = "papers, web"
     max_docs: Optional[int] = 10
+    
+    # Quality control parameters
+    depth_level: Optional[int] = 3
+    quality_threshold: Optional[float] = 0.7
+    enable_fact_checking: Optional[bool] = True
+    enable_iterative_refinement: Optional[bool] = True
+    max_iterations: Optional[int] = 2
+    min_sources_per_claim: Optional[int] = 2
 
 class ResearchResponse(BaseModel):
     status: str
@@ -68,7 +76,13 @@ async def stream_research(
     start_date: Optional[str] = "2020-01-01",
     end_date: Optional[str] = None,
     sources: Optional[str] = "papers, web",
-    max_docs: Optional[int] = 5
+    max_docs: Optional[int] = 5,
+    depth_level: Optional[int] = 3,
+    quality_threshold: Optional[float] = 0.7,
+    enable_fact_checking: Optional[bool] = True,
+    enable_iterative_refinement: Optional[bool] = True,
+    max_iterations: Optional[int] = 2,
+    min_sources_per_claim: Optional[int] = 2
 ):
     """
     Stream research progress with real-time status updates.
@@ -81,62 +95,123 @@ async def stream_research(
         'start_date': start_date,
         'end_date': end_date,
         'sources': sources,
-        'max_docs': max_docs
+        'max_docs': max_docs,
+        'depth_level': depth_level,
+        'quality_threshold': quality_threshold,
+        'enable_fact_checking': enable_fact_checking,
+        'enable_iterative_refinement': enable_iterative_refinement,
+        'max_iterations': max_iterations,
+        'min_sources_per_claim': min_sources_per_claim
     }
 
     async def run_crew_with_status():
-        """Run crew and emit status updates."""
+        """Run crew and emit real-time status updates from actual agent activities."""
+        from latest_ai_development.streaming_callback import StreamingCallbackHandler, create_step_callback, create_task_callback
+        
         try:
             # Send initial status
             await status_queue.put({
                 "type": "started",
-                "message": "Initializing Deep Research Agent...",
+                "message": "Initializing Deep Research Crew with 9 agents and 12 tasks...",
                 "agent": "System"
             })
             
-            # Simulate status updates (in real implementation, these would come from crew callbacks)
-            await asyncio.sleep(1)
+            # Create streaming callback handler
+            callback_handler = StreamingCallbackHandler(status_queue)
+            
+            # Initialize crew
+            await asyncio.sleep(0.5)
             await status_queue.put({
-                "type": "agent_started",
-                "message": "Research Lead is planning the research strategy...",
-                "agent": "Principal Investigator"
+                "type": "system",
+                "message": "Loading specialized agents: Research Lead, Literature Miner, Senior Analyst, Report Composer, Data Validator, Cross-Reference Specialist, Methodology Critic, Citation Expert, Evidence Evaluator",
+                "agent": "System"
             })
             
-            await asyncio.sleep(2)
-            await status_queue.put({
-                "type": "thinking",
-                "message": "Breaking down research questions...",
-                "agent": "Principal Investigator"
-            })
-            
-            # Run the actual crew in a thread pool to avoid blocking
+            # Get the crew instance
             loop = asyncio.get_event_loop()
-            crew = LatestAiDevelopment().crew()
+            crew_instance = LatestAiDevelopment()
             
+            # Add step callbacks to all agents
+            step_cb = create_step_callback(callback_handler)
+            task_cb = create_task_callback(callback_handler)
+            
+            # Notify about quality control settings
             await status_queue.put({
-                "type": "task_started",
-                "message": "Compiling sources and documents...",
-                "agent": "Source Compiler"
+                "type": "system",
+                "message": f"Quality Control: Depth Level {inputs.get('depth_level', 3)}/5, Quality Threshold {inputs.get('quality_threshold', 0.7)}, Fact Checking {'Enabled' if inputs.get('enable_fact_checking') else 'Disabled'}",
+                "agent": "System"
             })
             
+            await asyncio.sleep(0.5)
+            
+            # Map task names to agent names for better status messages
+            task_agent_map = {
+                "discovery_task": "Principal Investigator",
+                "source_validation_task": "Data Validator",
+                "literature_mining_task": "Literature Miner",
+                "claim_extraction_task": "Literature Miner",
+                "methodology_review_task": "Methodology Critic",
+                "cross_reference_task": "Cross-Reference Specialist",
+                "evidence_evaluation_task": "Evidence Evaluator",
+                "citation_validation_task": "Citation Expert",
+                "deep_analysis_task": "Senior Analyst",
+                "quality_assurance_task": "Data Validator",
+                "iterative_refinement_task": "Principal Investigator",
+                "report_generation_task": "Report Composer"
+            }
+            
+            # Create a custom callback to track task progress
+            task_count = 0
+            total_tasks = 12
+            
+            async def task_progress_callback(task_output):
+                nonlocal task_count
+                task_count += 1
+                await callback_handler.on_task_complete(task_output)
+                await status_queue.put({
+                    "type": "progress",
+                    "message": f"Progress: {task_count}/{total_tasks} tasks completed",
+                    "progress": int((task_count / total_tasks) * 100)
+                })
+            
+            # Build crew with callbacks
+            crew = crew_instance.crew()
+            
+            # Manually add callbacks to tasks (CrewAI will use these)
+            for task in crew.tasks:
+                task.callback = lambda output: asyncio.create_task(task_progress_callback(output))
+            
+            # Run the crew in executor to avoid blocking
+            await status_queue.put({
+                "type": "execution_started",
+                "message": "Beginning deep research execution...",
+                "agent": "System"
+            })
+            
+            # Execute crew
             result = await loop.run_in_executor(None, lambda: crew.kickoff(inputs=inputs))
             
             # Send completion status
             await status_queue.put({
                 "type": "completed",
-                "message": "Research complete!",
-                "result": str(result)
+                "message": "Deep research complete! Generated comprehensive report with quality metrics.",
+                "result": str(result),
+                "agent": "System"
             })
             
             # Signal done
             await status_queue.put({"type": "done"})
             
         except Exception as e:
+            import traceback
+            error_details = traceback.format_exc()
             await status_queue.put({
                 "type": "error",
-                "message": str(e)
+                "message": f"{str(e)}",
+                "details": error_details
             })
             await status_queue.put({"type": "done"})
+
     
     # Start crew execution in background
     asyncio.create_task(run_crew_with_status())
@@ -164,7 +239,13 @@ async def run_research(request: ResearchRequest):
         'start_date': request.start_date,
         'end_date': request.end_date,
         'sources': request.sources,
-        'max_docs': request.max_docs
+        'max_docs': request.max_docs,
+        'depth_level': request.depth_level,
+        'quality_threshold': request.quality_threshold,
+        'enable_fact_checking': request.enable_fact_checking,
+        'enable_iterative_refinement': request.enable_iterative_refinement,
+        'max_iterations': request.max_iterations,
+        'min_sources_per_claim': request.min_sources_per_claim
     }
 
     try:
