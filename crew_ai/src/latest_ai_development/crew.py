@@ -40,6 +40,7 @@ class LatestAiDevelopment():
         return Agent(
             config=self.agents_config['literature_miner'],
             tools=[
+                SerperSearchTool(),  # Added search capability
                 PDFParserTool(),
                 WebScraperTool(),
                 EnhancedFirecrawlTool(),  # Advanced web scraping with fallback
@@ -126,6 +127,13 @@ class LatestAiDevelopment():
         """Document extraction and parsing."""
         return Task(
             config=self.tasks_config['literature_mining_task'],
+        )
+
+    @task
+    def source_verification_task(self) -> Task:
+        """Verify and cross-reference gathered data."""
+        return Task(
+            config=self.tasks_config['source_verification_task'],
         )
 
     @task

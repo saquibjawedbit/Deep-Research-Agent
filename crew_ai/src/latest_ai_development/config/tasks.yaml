@@ -71,6 +71,20 @@ literature_mining_task:
     Format as JSON list of Document objects
   agent: literature_miner
 
+source_verification_task:
+  description: >
+    Take the raw data gathered from the Web and YouTube. 
+    1. Check for consistency: Does the YouTube video transcript match the web article?
+    2. Rank sources by credibility (e.g., Official documentation > Random blog).
+    3. Discard any data that lacks a clear author or publication date.
+  expected_output: >
+    A verified data report with:
+    - List of verified sources and their credibility scores
+    - List of discarded sources and reasons
+    - Consistency checks between different source types
+    - Final ranked list of data for analysis
+  agent: data_validator
+
 claim_extraction_task:
   description: >
     Extract key insights, arguments, and data from the processed documents.
