@@ -18,38 +18,66 @@ warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
 
 def run():
     """
-    Run the Deep Research Crew.
+    Run the Deep Research Crew with enhanced quality control.
     """
-    # Example research query
+    # Enhanced research parameters
     inputs = {
+        # Core research parameters
         'query': 'efficacy of transformer models for natural language processing',
         'start_date': '2020-01-01',
         'end_date': str(datetime.now().year) + '-12-31',
         'sources': 'papers, web',
-        'max_docs': 10
+        'max_docs': 15,
+        
+        # Quality control parameters
+        'depth_level': 3,  # 1-5 scale: 1=basic, 3=standard, 5=exhaustive
+        'quality_threshold': 0.7,  # 0.0-1.0: minimum source credibility score
+        'enable_fact_checking': True,  # Enable cross-reference validation
+        'enable_iterative_refinement': True,  # Enable multi-pass research
+        'max_iterations': 2,  # Maximum refinement iterations
+        'min_sources_per_claim': 2,  # Minimum sources to validate a claim
     }
     
     print("=" * 80)
-    print("DEEP RESEARCH CREW - Phase 1 MVP")
+    print("DEEP RESEARCH CREW - Enhanced with Quality Control")
     print("=" * 80)
-    print(f"\nResearch Query: {inputs['query']}")
-    print(f"Date Range: {inputs['start_date']} to {inputs['end_date']}")
-    print(f"Sources: {inputs['sources']}")
-    print(f"Max Documents: {inputs['max_docs']}")
+    print(f"\n📋 Research Query: {inputs['query']}")
+    print(f"📅 Date Range: {inputs['start_date']} to {inputs['end_date']}")
+    print(f"📚 Sources: {inputs['sources']}")
+    print(f"📊 Max Documents: {inputs['max_docs']}")
+    print(f"\n🎯 Quality Control Settings:")
+    print(f"   • Depth Level: {inputs['depth_level']}/5")
+    print(f"   • Quality Threshold: {inputs['quality_threshold']}")
+    print(f"   • Fact Checking: {'✓ Enabled' if inputs['enable_fact_checking'] else '✗ Disabled'}")
+    print(f"   • Iterative Refinement: {'✓ Enabled' if inputs['enable_iterative_refinement'] else '✗ Disabled'}")
+    print(f"   • Min Sources per Claim: {inputs['min_sources_per_claim']}")
     print("\n" + "=" * 80 + "\n")
 
     try:
         result = LatestAiDevelopment().crew().kickoff(inputs=inputs)
         
         print("\n" + "=" * 80)
-        print("RESEARCH COMPLETE")
+        print("✅ RESEARCH COMPLETE")
         print("=" * 80)
-        print(f"\nReport saved to: research_report.md")
-        print("\nCheck the report for detailed findings, claims, and evidence.")
+        print(f"\n📄 Report saved to: research_report.md")
+        print("\n📊 Enhanced Features Applied:")
+        print("   ✓ Source credibility validation")
+        print("   ✓ Cross-reference fact checking")
+        print("   ✓ Methodology critique")
+        print("   ✓ Evidence strength rating")
+        print("   ✓ Citation validation")
+        print("   ✓ Quality assurance review")
+        print("\n💡 Check the report for:")
+        print("   • Evidence quality ratings")
+        print("   • Source credibility scores")
+        print("   • Methodology assessments")
+        print("   • Cross-referenced claims")
+        print("   • Citation network")
         
         return result
     except Exception as e:
         raise Exception(f"An error occurred while running the crew: {e}")
+
 
 
 def train():

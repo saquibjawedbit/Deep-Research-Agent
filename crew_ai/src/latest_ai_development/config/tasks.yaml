@@ -1,4 +1,4 @@
-# Phase 1 MVP Tasks for Deep Research Crew
+# Enhanced Deep Research Tasks with Quality Control
 
 discovery_task:
   description: >
@@ -9,17 +9,47 @@ discovery_task:
     that outlines which documents to prioritize and what key insights to look for.
     
     Consider the date range ({start_date} to {end_date}) and source types: {sources}
+    
+    Based on depth_level {depth_level}, adjust the scope:
+    - Level 1-2: Focus on 3-5 key questions and primary sources
+    - Level 3: Expand to 5-8 questions with secondary sources
+    - Level 4-5: Comprehensive coverage with 8-12 questions, tertiary sources, and edge cases
   expected_output: >
     A structured research plan with:
-    - 3-5 specific research questions derived from the query
+    - 3-12 specific research questions (based on depth level)
     - List of prioritized source types and search strategies
     - Key concepts and entities to track
     - Success criteria for the research
+    - Quality thresholds and validation requirements
   agent: research_lead
+
+source_validation_task:
+  description: >
+    Before processing documents, validate their credibility and quality.
+    
+    For each potential source, assess:
+    - Author credentials and institutional affiliations
+    - Publication venue reputation and peer review status
+    - Citation count and impact metrics
+    - Potential conflicts of interest or bias
+    - Methodological rigor (if applicable)
+    - Date of publication and currency of information
+    
+    Only sources meeting quality_threshold {quality_threshold} should proceed to literature mining.
+    Flag sources with potential issues for special scrutiny.
+  expected_output: >
+    A validated source list with:
+    - Source ID and metadata
+    - Credibility score (0.0-1.0)
+    - Quality assessment notes
+    - Identified biases or limitations
+    - Recommendation (accept/review/reject)
+    Format as JSON list of SourceValidation objects
+  agent: data_validator
 
 literature_mining_task:
   description: >
-    Based on the research plan, find and process relevant documents about "{query}".
+    Based on the research plan and validated sources, find and process relevant documents about "{query}".
     
     Use the PDF parser and web scraper tools to extract structured information from
     up to {max_docs} documents. For each document, extract:
@@ -27,14 +57,17 @@ literature_mining_task:
     - Abstract and key sections (methods, results, conclusions)
     - Citations and references
     - Datasets and code repositories mentioned
+    - Statistical data and key findings
     
     Focus on high-quality sources published between {start_date} and {end_date}.
+    Enrich metadata with publication metrics and credibility indicators.
   expected_output: >
     A collection of structured documents with:
     - Full metadata and provenance
     - Extracted sections and content
     - Citations and references
     - Identified datasets and code links
+    - Source quality score
     Format as JSON list of Document objects
   agent: literature_miner
 
@@ -52,32 +85,196 @@ claim_extraction_task:
     - The exact text with context
     - Type of insight (empirical, theoretical, methodological)
     - Provenance (source, page, section)
+    - Confidence level based on evidence strength
+    - Supporting and contradicting evidence
   expected_output: >
     A list of extracted insights with full provenance:
     - Insight ID and text
     - Insight type
     - Source document and location
     - Context from surrounding text
+    - Confidence score (0.0-1.0)
+    - Evidence strength rating
     Format as JSON list of Insight objects
   agent: literature_miner
+
+methodology_review_task:
+  description: >
+    Critically evaluate the research methodologies used in the source materials.
+    
+    For each source that presents empirical research:
+    - Assess the appropriateness of the research design
+    - Evaluate sample size, selection, and representativeness
+    - Identify potential confounding variables
+    - Review statistical methods and their validity
+    - Check for common methodological pitfalls
+    - Rate the overall methodological rigor
+    
+    Provide constructive critique that helps contextualize findings.
+  expected_output: >
+    Methodology assessments including:
+    - Source ID and study type
+    - Methodological strengths
+    - Methodological limitations
+    - Potential confounds or biases
+    - Rigor score (0.0-1.0)
+    - Impact on reliability of findings
+    Format as JSON list of MethodologyReview objects
+  agent: methodology_critic
+
+cross_reference_task:
+  description: >
+    Cross-verify claims across multiple independent sources.
+    
+    For each major claim extracted:
+    - Identify all sources that address the claim
+    - Determine if sources agree, disagree, or provide nuance
+    - Calculate consensus level across sources
+    - Identify outlier claims with limited support
+    - Flag contradictions that need resolution
+    
+    Only enabled if enable_fact_checking is {enable_fact_checking}.
+    Require minimum {min_sources_per_claim} sources per claim.
+  expected_output: >
+    Cross-reference analysis with:
+    - Claim ID and text
+    - List of supporting sources
+    - List of contradicting sources
+    - Consensus level (0.0-1.0)
+    - Reliability rating
+    - Notes on contradictions
+    Format as JSON list of CrossReference objects
+  agent: cross_reference_specialist
+
+evidence_evaluation_task:
+  description: >
+    Rate the strength and reliability of evidence for each claim.
+    
+    Apply evidence hierarchy principles:
+    - Systematic reviews and meta-analyses (highest)
+    - Randomized controlled trials
+    - Cohort studies
+    - Case-control studies
+    - Cross-sectional studies
+    - Case reports and expert opinion (lowest)
+    
+    For each claim, assess:
+    - Type of evidence
+    - Sample size and statistical power
+    - Effect size and practical significance
+    - Consistency across studies
+    - Directness of evidence
+  expected_output: >
+    Evidence strength ratings:
+    - Claim ID
+    - Evidence type
+    - Strength rating (A/B/C/D/F)
+    - Statistical significance
+    - Practical importance
+    - Confidence interval
+    - Notes and caveats
+    Format as JSON list of EvidenceRating objects
+  agent: evidence_evaluator
+
+citation_validation_task:
+  description: >
+    Validate all citations and build a comprehensive citation network.
+    
+    For each citation:
+    - Verify the citation is accurate and complete
+    - Check if the cited source actually supports the claim
+    - Identify citation cascades (unchecked propagation)
+    - Build citation graph showing relationships
+    - Flag potential citation errors or misrepresentations
+    
+    Ensure all claims in the final report are properly attributed.
+  expected_output: >
+    Citation validation report:
+    - Total citations processed
+    - Citation accuracy rate
+    - Identified citation errors
+    - Citation network graph
+    - Provenance chain for each claim
+    Format as JSON CitationReport object
+  agent: citation_expert
 
 deep_analysis_task:
   description: >
     Analyze the extracted insights to identify trends, patterns, and underlying themes.
     
-    Synthesize the information to answer the research questions.
+    Synthesize the information to answer the research questions:
     1. Identify consensus and dissensus among sources
     2. Connect dots between disparate pieces of information
     3. Evaluate the strength of evidence for different claims
     4. Construct a coherent narrative or argument
+    5. Identify knowledge gaps and areas needing more research
+    6. Assess bias patterns across sources
+    7. Evaluate the overall quality of the evidence base
+    
+    Incorporate methodology reviews, cross-references, and evidence ratings.
   expected_output: >
     A synthesized analysis of the topic including:
     - Key themes and patterns
     - Areas of agreement and disagreement
     - Critical evaluation of the evidence
     - Strategic insights and implications
+    - Knowledge gaps identified
+    - Bias assessment
+    - Overall evidence quality rating
     Format as a structured Analysis object
   agent: senior_analyst
+
+quality_assurance_task:
+  description: >
+    Perform final quality check before report generation.
+    
+    Verify:
+    - All research questions have been addressed
+    - Claims are supported by adequate evidence (min {min_sources_per_claim} sources)
+    - Citations are accurate and complete
+    - Methodological limitations are acknowledged
+    - Biases are identified and discussed
+    - Evidence strength is clearly communicated
+    - Quality threshold {quality_threshold} is met
+    
+    If quality standards are not met and enable_iterative_refinement is {enable_iterative_refinement},
+    identify gaps and recommend additional research.
+  expected_output: >
+    Quality assurance report:
+    - Overall quality score (0.0-1.0)
+    - Research questions coverage
+    - Evidence adequacy assessment
+    - Citation completeness
+    - Identified gaps or weaknesses
+    - Recommendations for improvement
+    - Pass/fail decision
+    Format as QualityReport object
+  agent: data_validator
+
+iterative_refinement_task:
+  description: >
+    If quality assurance identifies gaps, conduct targeted additional research.
+    
+    Only runs if enable_iterative_refinement is {enable_iterative_refinement} and
+    quality score is below threshold.
+    
+    Focus on:
+    - Unanswered research questions
+    - Claims with insufficient evidence
+    - Contradictions needing resolution
+    - Missing perspectives or sources
+    
+    Maximum {max_iterations} iterations to prevent infinite loops.
+  expected_output: >
+    Refinement report:
+    - Iteration number
+    - Gaps addressed
+    - Additional sources found
+    - New insights extracted
+    - Updated quality score
+    - Continue/complete decision
+    Format as RefinementReport object
+  agent: research_lead
 
 report_generation_task:
   description: >
@@ -86,22 +283,45 @@ report_generation_task:
     The report should include:
     1. Executive Summary
        - High-level overview and strategic takeaways
+       - Overall evidence quality rating
     
-    2. In-Depth Analysis
+    2. Research Questions and Answers
+       - Each question with detailed answer
+       - Evidence strength for each answer
+    
+    3. In-Depth Analysis
        - Detailed exploration of key themes
        - Synthesis of evidence from multiple sources
        - Discussion of implications
+       - Identification of knowledge gaps
     
-    3. Methodology and Sources
+    4. Methodology and Quality Assessment
        - Description of the research process
-       - List of all sources with metadata
+       - Quality control measures applied
+       - Limitations and biases
+       - Evidence hierarchy used
+    
+    5. Sources and Citations
+       - Complete bibliography with metadata
+       - Source credibility ratings
+       - Citation network visualization
+    
+    6. Appendices
+       - Detailed evidence tables
+       - Methodology reviews
+       - Cross-reference matrices
     
     Use clear, professional language. Make the report authoritative and accessible.
+    Include quality metrics throughout.
   expected_output: >
     A complete research report in Markdown format with:
-    - Executive summary
-    - Deep analysis sections
-    - Full source documentation
+    - Executive summary with quality rating
+    - Detailed answers to research questions
+    - Deep analysis sections with evidence ratings
+    - Methodology and quality assessment
+    - Full source documentation with credibility scores
+    - Evidence strength indicators throughout
+    - Appendices with supporting data
     Save to file: research_report.md
   agent: report_composer
   output_file: research_report.md

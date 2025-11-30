@@ -52,6 +52,47 @@ class LatestAiDevelopment():
             verbose=True
         )
 
+    @agent
+    def data_validator(self) -> Agent:
+        """Data quality assurance and source credibility specialist."""
+        return Agent(
+            config=self.agents_config['data_validator'],
+            verbose=True
+        )
+
+    @agent
+    def cross_reference_specialist(self) -> Agent:
+        """Cross-verification and fact-checking expert."""
+        return Agent(
+            config=self.agents_config['cross_reference_specialist'],
+            verbose=True
+        )
+
+    @agent
+    def methodology_critic(self) -> Agent:
+        """Research methodology evaluator."""
+        return Agent(
+            config=self.agents_config['methodology_critic'],
+            verbose=True
+        )
+
+    @agent
+    def citation_expert(self) -> Agent:
+        """Citation and provenance specialist."""
+        return Agent(
+            config=self.agents_config['citation_expert'],
+            verbose=True
+        )
+
+    @agent
+    def evidence_evaluator(self) -> Agent:
+        """Evidence strength and reliability assessor."""
+        return Agent(
+            config=self.agents_config['evidence_evaluator'],
+            verbose=True
+        )
+
+
     @task
     def discovery_task(self) -> Task:
         """Initial query understanding and research planning."""
@@ -87,6 +128,56 @@ class LatestAiDevelopment():
             config=self.tasks_config['report_generation_task'],
             output_file='research_report.md'
         )
+
+    @task
+    def source_validation_task(self) -> Task:
+        """Validate source credibility before processing."""
+        return Task(
+            config=self.tasks_config['source_validation_task'],
+        )
+
+    @task
+    def methodology_review_task(self) -> Task:
+        """Critically evaluate research methodologies."""
+        return Task(
+            config=self.tasks_config['methodology_review_task'],
+        )
+
+    @task
+    def cross_reference_task(self) -> Task:
+        """Cross-verify claims across multiple sources."""
+        return Task(
+            config=self.tasks_config['cross_reference_task'],
+        )
+
+    @task
+    def evidence_evaluation_task(self) -> Task:
+        """Rate evidence strength and reliability."""
+        return Task(
+            config=self.tasks_config['evidence_evaluation_task'],
+        )
+
+    @task
+    def citation_validation_task(self) -> Task:
+        """Validate citations and build citation network."""
+        return Task(
+            config=self.tasks_config['citation_validation_task'],
+        )
+
+    @task
+    def quality_assurance_task(self) -> Task:
+        """Perform final quality check before report generation."""
+        return Task(
+            config=self.tasks_config['quality_assurance_task'],
+        )
+
+    @task
+    def iterative_refinement_task(self) -> Task:
+        """Conduct targeted additional research if gaps identified."""
+        return Task(
+            config=self.tasks_config['iterative_refinement_task'],
+        )
+
 
     @crew
     def crew(self) -> Crew:
