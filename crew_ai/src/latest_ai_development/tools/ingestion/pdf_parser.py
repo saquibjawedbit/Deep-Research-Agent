@@ -2,7 +2,7 @@
 
 from typing import Any, Dict, Type, Optional
 from pydantic import BaseModel, Field
-import pymupdf  # PyMuPDF
+import pymupdf
 import re
 from pathlib import Path
 
