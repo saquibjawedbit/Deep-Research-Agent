@@ -175,5 +175,34 @@ def run_with_trigger():
     except Exception as e:
         raise Exception(f"An error occurred while running the crew with trigger: {e}")
 
+def run_server():
+    """
+    Run the FastAPI backend server.
+    """
+    import uvicorn
+    import os
+    
+    # Change to src directory to ensure proper module imports
+    src_dir = os.path.join(os.path.dirname(__file__), '..')
+    os.chdir(src_dir)
+    
+    print("=" * 80)
+    print("🚀 Starting Deep Research Agent API Server")
+    print("=" * 80)
+    print("\n📡 Server will be available at:")
+    print("   • Local: http://localhost:8000")
+    print("   • Network: http://0.0.0.0:8000")
+    print("\n📚 API Documentation:")
+    print("   • Swagger UI: http://localhost:8000/docs")
+    print("   • ReDoc: http://localhost:8000/redoc")
+    print("\n" + "=" * 80 + "\n")
+    
+    uvicorn.run(
+        "latest_ai_development.api:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True
+    )
+
 if __name__ == "__main__":
     run()

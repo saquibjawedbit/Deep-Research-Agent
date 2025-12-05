@@ -18,24 +18,16 @@ from crewai.knowledge.source.text_file_knowledge_source import TextFileKnowledge
 
 # Import Pydantic models
 from .schemas import (
-    SourceValidation,
     SourceValidationList,
-    Insight,
     InsightList,
-    Document,
     DocumentList,
-    MethodologyReview,
     MethodologyReviewList,
-    CrossReference,
     CrossReferenceList,
-    EvidenceRating,
     EvidenceRatingList,
     CitationReport,
     Analysis,
     QualityReport,
     RefinementReport,
-    DeepResearchReport,
-    # New schemas for Gemini Deep Research
     ResearchPlan,
     ParallelResearchPathList,
     VisualizationList,
@@ -56,9 +48,9 @@ class LatestAiDevelopment():
         """Research orchestrator and synthesis lead."""
         return Agent(
             config=self.agents_config['research_lead'],
-            tools=[SerperSearchTool()],  # Add search capability
+            # No tools for manager agent in hierarchical process
             verbose=True,
-            allow_delegation=False
+            allow_delegation=True  # Enable delegation for hierarchical orchestration
         )
 
     @agent
@@ -134,7 +126,6 @@ class LatestAiDevelopment():
             verbose=True
         )
 
-    # New specialized agents for Gemini Deep Research
 
     @agent
     def query_expansion_specialist(self) -> Agent:
@@ -172,10 +163,6 @@ class LatestAiDevelopment():
             config=self.agents_config['visualization_specialist'],
             verbose=True
         )
-
-
-    # Tasks for Deep Research workflow
-
 
     @task
     def query_expansion_task(self) -> Task:
@@ -349,11 +336,8 @@ class LatestAiDevelopment():
             process=Process.hierarchical,  # Changed to hierarchical for better orchestration
             manager_agent=self.research_lead(),  # Research lead orchestrates the workflow
             verbose=True,
-            memory=True,
-            embedder={
-                "provider": "openai",
-                "config": {"model": "text-embedding-3-small"}
-            }
+            memory=True
+            # Embedder removed - using local LLM without external embeddings
         )
 
     def research_crew(self) -> Crew:
