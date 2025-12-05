@@ -55,9 +55,8 @@ class LatestAiDevelopment():
         """Research orchestrator and synthesis lead."""
         return Agent(
             config=self.agents_config['research_lead'],
-            # No tools for manager agent in hierarchical process
             verbose=True,
-            allow_delegation=True  # Enable delegation for hierarchical orchestration
+            allow_delegation=False  # No delegation needed in sequential process
         )
 
     @agent
@@ -176,7 +175,6 @@ class LatestAiDevelopment():
         """Transform user query into multi-step research plan."""
         return Task(
             config=self.tasks_config['query_expansion_task'],
-            output_pydantic=ResearchPlan,
             context=[]
         )
 
@@ -292,7 +290,6 @@ class LatestAiDevelopment():
         """Execute parallel research across multiple subtopics."""
         return Task(
             config=self.tasks_config['parallel_research_task'],
-            output_pydantic=ParallelResearchPathList,
             async_execution=True,
             context=[]
         )
@@ -310,7 +307,6 @@ class LatestAiDevelopment():
         """Evaluate completeness and decide whether to continue research."""
         return Task(
             config=self.tasks_config['iterative_deepening_task'],
-            output_pydantic=IterativeRefinementDecision,
             context=[]
         )
 
@@ -319,7 +315,6 @@ class LatestAiDevelopment():
         """Generate visualizations for key findings."""
         return Task(
             config=self.tasks_config['visualization_generation_task'],
-            output_pydantic=VisualizationList,
             context=[]
         )
 
@@ -328,7 +323,6 @@ class LatestAiDevelopment():
         """Generate final research report."""
         return Task(
             config=self.tasks_config['report_generation_task'],
-            output_pydantic=EnhancedDeepResearchReport,
             output_file='research_report.md',
             context=[]
         )
@@ -337,8 +331,9 @@ class LatestAiDevelopment():
     @crew
     def crew(self) -> Crew:
         """Creates the Deep Research Crew with Gemini Deep Research capabilities"""
-        # For hierarchical process, exclude manager agent from agents list
-        worker_agents = [
+        # Use all agents including research_lead for sequential process
+        all_agents = [
+            self.research_lead(),
             self.literature_miner(),
             self.senior_analyst(),
             self.report_composer(),
@@ -357,10 +352,9 @@ class LatestAiDevelopment():
         knowledge_sources = self.knowledge_manager.get_all_knowledge_sources()
         
         return Crew(
-            agents=worker_agents,  # Exclude manager agent
+            agents=all_agents,
             tasks=self.tasks,
-            process=Process.hierarchical,
-            manager_agent=self.research_lead(),  # Manager orchestrates
+            process=Process.sequential,  # Changed to sequential for better reliability with local LLM
             verbose=True,
             memory=False,  # Disabled to avoid OpenAI API requirement with local LLM
             knowledge_sources=knowledge_sources  # Add persistent knowledge
