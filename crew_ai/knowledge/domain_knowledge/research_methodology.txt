@@ -1,0 +1,29 @@
+Research Methodology Best Practices
+
+This knowledge base contains best practices for conducting deep research:
+
+1. Multi-Source Verification
+   - Always cross-reference claims with at least 2-3 independent sources
+   - Prioritize peer-reviewed publications and official documentation
+   - Be cautious of single-source claims
+
+2. Source Credibility Assessment
+   - Check author credentials and institutional affiliations
+   - Verify publication dates for currency of information
+   - Look for potential conflicts of interest
+
+3. Evidence Hierarchy
+   - Systematic reviews and meta-analyses (highest quality)
+   - Randomized controlled trials
+   - Cohort and case-control studies
+   - Expert opinions and case reports (lowest quality)
+
+4. Citation Practices
+   - Always provide complete citations with URLs
+   - Verify that citations actually support the claims made
+   - Track citation networks to identify seminal works
+
+5. Knowledge Synthesis
+   - Identify common themes across multiple sources
+   - Resolve contradictions by examining methodology differences
+   - Note areas of consensus vs. ongoing debate

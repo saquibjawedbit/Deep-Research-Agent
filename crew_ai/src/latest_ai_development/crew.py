@@ -35,6 +35,9 @@ from .schemas import (
     EnhancedDeepResearchReport
 )
 
+# Import knowledge manager
+from .utils.knowledge_manager import ResearchKnowledgeManager
+
 
 @CrewBase
 class LatestAiDevelopment():
@@ -42,6 +45,11 @@ class LatestAiDevelopment():
 
     agents: List[BaseAgent]
     tasks: List[Task]
+    
+    def __init__(self):
+        """Initialize the crew with knowledge management."""
+        super().__init__()
+        self.knowledge_manager = ResearchKnowledgeManager()
 
     @agent
     def research_lead(self) -> Agent:
@@ -330,14 +338,33 @@ class LatestAiDevelopment():
     @crew
     def crew(self) -> Crew:
         """Creates the Deep Research Crew with Gemini Deep Research capabilities"""
+        # For hierarchical process, exclude manager agent from agents list
+        worker_agents = [
+            self.literature_miner(),
+            self.senior_analyst(),
+            self.report_composer(),
+            self.data_validator(),
+            self.cross_reference_specialist(),
+            self.methodology_critic(),
+            self.citation_expert(),
+            self.evidence_evaluator(),
+            self.query_expansion_specialist(),
+            self.web_search_specialist(),
+            self.synthesis_expert(),
+            self.visualization_specialist()
+        ]
+        
+        # Get knowledge sources from previous research sessions
+        knowledge_sources = self.knowledge_manager.get_all_knowledge_sources()
+        
         return Crew(
-            agents=self.agents,
+            agents=worker_agents,  # Exclude manager agent
             tasks=self.tasks,
-            process=Process.hierarchical,  # Changed to hierarchical for better orchestration
-            manager_agent=self.research_lead(),  # Research lead orchestrates the workflow
+            process=Process.hierarchical,
+            manager_agent=self.research_lead(),  # Manager orchestrates
             verbose=True,
-            memory=True
-            # Embedder removed - using local LLM without external embeddings
+            memory=True,
+            knowledge_sources=knowledge_sources  # Add persistent knowledge
         )
 
     def research_crew(self) -> Crew:
