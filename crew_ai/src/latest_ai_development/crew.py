@@ -362,7 +362,7 @@ class LatestAiDevelopment():
             process=Process.hierarchical,
             manager_agent=self.research_lead(),  # Manager orchestrates
             verbose=True,
-            memory=True,
+            memory=False,  # Disabled to avoid OpenAI API requirement with local LLM
             knowledge_sources=knowledge_sources  # Add persistent knowledge
         )
 
