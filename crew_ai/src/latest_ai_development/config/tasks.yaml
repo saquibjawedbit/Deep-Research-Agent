@@ -1,4 +1,34 @@
 # Enhanced Deep Research Tasks with Quality Control
+# New tasks for Gemini Deep Research capabilities
+
+query_expansion_task:
+  description: >
+    Transform the user's research query "{query}" into a comprehensive, multi-step research plan.
+    
+    Analyze the query to:
+    1. Identify the core research objective and underlying questions
+    2. Break down the query into 3-8 specific subtopics based on depth_level {depth_level}
+    3. For each subtopic, generate targeted search queries
+    4. Prioritize subtopics by importance and dependencies
+    5. Define search strategies (academic papers, news articles, expert blogs, videos, etc.)
+    6. Establish success criteria for research completeness
+    7. Estimate time and sources needed
+    
+    This plan will guide all subsequent research activities and enable parallel execution.
+  expected_output: >
+    A detailed ResearchPlan object with:
+    - Original query and refined research objective
+    - List of 3-8 ResearchSubtopic objects, each with:
+      * Title and description
+      * Specific search queries (3-5 per subtopic)
+      * Priority level (1-5)
+      * Estimated sources needed
+    - Overall search strategies
+    - Success criteria (measurable outcomes)
+    - Estimated duration in minutes
+    Format as JSON ResearchPlan object
+  agent: query_expansion_specialist
+
 
 discovery_task:
   description: >
@@ -290,52 +320,179 @@ iterative_refinement_task:
     Format as RefinementReport object
   agent: research_lead
 
+# New tasks for parallel execution and synthesis
+
+parallel_research_task:
+  description: >
+    Execute parallel research across multiple subtopics from the research plan.
+    
+    For each subtopic in the research plan:
+    1. Execute the specific search queries defined for that subtopic
+    2. Browse and analyze relevant sources (aim for {max_docs} sources per subtopic)
+    3. Extract key insights and findings specific to this subtopic
+    4. Document all sources with full metadata
+    5. Track completion status (completed/partial/failed)
+    
+    Work autonomously and efficiently, following the search strategies from the research plan.
+    Focus on finding authoritative, current, and diverse sources.
+  expected_output: >
+    A ParallelResearchPathList with one ParallelResearchPath per subtopic:
+    - Path ID and subtopic name
+    - Number of sources found
+    - Key insights extracted (3-10 per path)
+    - List of Document objects with full metadata
+    - Completion status
+    Format as JSON ParallelResearchPathList object
+  agent: web_search_specialist
+  async_execution: true
+
+perspective_synthesis_task:
+  description: >
+    Synthesize findings from all parallel research paths into a unified understanding.
+    
+    Analyze the results from parallel_research_task to:
+    1. Identify common themes and patterns across different subtopics
+    2. Resolve contradictions by finding deeper truths or contextual differences
+    3. Connect insights from different research paths
+    4. Identify unique perspectives that only emerged from specific paths
+    5. Create an integrated narrative that combines all perspectives
+    6. Highlight areas where multiple paths reinforce the same conclusions
+    7. Note areas of uncertainty or conflicting information
+    
+    The goal is to create a coherent whole that is greater than the sum of its parts.
+  expected_output: >
+    A comprehensive synthesis including:
+    - Integrated key findings (combining all research paths)
+    - Common themes identified across paths
+    - Resolved contradictions with explanations
+    - Unique insights from each path
+    - Areas of strong consensus
+    - Areas of uncertainty or conflict
+    - Overall narrative connecting all findings
+    Format as structured text with clear sections
+  agent: synthesis_expert
+
+iterative_deepening_task:
+  description: >
+    Evaluate research completeness and decide whether to continue or complete.
+    
+    Review the quality assurance report and synthesized findings to determine:
+    1. Are all research questions adequately answered?
+    2. Is the evidence sufficient and high-quality (meets quality_threshold {quality_threshold})?
+    3. Are there significant knowledge gaps that need addressing?
+    4. Are there contradictions that need resolution?
+    5. Would additional research significantly improve the output?
+    
+    If enable_iterative_refinement is {enable_iterative_refinement} and quality is below threshold:
+    - Identify specific gaps and formulate new targeted queries
+    - Recommend additional research cycles (max {max_iterations} total iterations)
+    
+    Otherwise, approve proceeding to final report generation.
+  expected_output: >
+    An IterativeRefinementDecision with:
+    - should_continue: boolean decision
+    - reason: explanation for the decision
+    - identified_gaps: list of specific gaps if continuing
+    - additional_queries: new search queries if continuing
+    - current_quality_score: overall quality assessment
+    Format as JSON IterativeRefinementDecision object
+  agent: research_lead
+
+visualization_generation_task:
+  description: >
+    Create compelling visualizations of key research findings.
+    
+    Analyze the synthesized findings and generate visualizations for:
+    1. Comparative data (bar charts, comparison tables)
+    2. Trends over time (line graphs, timelines)
+    3. Relationships and connections (network diagrams for citations/concepts)
+    4. Concept hierarchies (mind maps, tree diagrams)
+    5. Statistical summaries (tables with key metrics)
+    
+    For each visualization:
+    - Choose the most appropriate visualization type
+    - Structure the data clearly
+    - Provide descriptive titles and captions
+    - Ensure visualizations enhance understanding
+    
+    Aim for 3-7 high-impact visualizations that illuminate key insights.
+  expected_output: >
+    A VisualizationList with 3-7 Visualization objects:
+    - Unique viz_id
+    - viz_type (chart/graph/network/mindmap/table)
+    - Descriptive title
+    - Explanation of what it shows
+    - Structured data for rendering
+    - Optional file path if image generated
+    Format as JSON VisualizationList object
+  agent: visualization_specialist
+
 report_generation_task:
   description: >
-    Create a comprehensive research report synthesizing all findings.
+    Create a comprehensive, multi-page research report synthesizing all findings.
     
-    The report should include:
-    1. Executive Summary
-       - High-level overview and strategic takeaways
+    The report should be structured like a professional research publication:
+    
+    1. Title and Executive Summary
+       - Compelling title reflecting the research scope
+       - High-level overview (2-3 paragraphs)
+       - Key takeaways and strategic insights
        - Overall evidence quality rating
     
-    2. Research Questions and Answers
-       - Each question with detailed answer
-       - Evidence strength for each answer
+    2. Table of Contents
+       - Clear navigation structure
     
-    3. In-Depth Analysis
+    3. Research Plan Summary
+       - Original query and research objective
+       - Subtopics investigated
+       - Methodology overview
+    
+    4. Research Questions and Answers
+       - Each question with comprehensive answer
+       - Evidence strength indicators
+       - Citations for all claims
+    
+    5. In-Depth Analysis
        - Detailed exploration of key themes
-       - Synthesis of evidence from multiple sources
+       - Multi-perspective synthesis
        - Discussion of implications
-       - Identification of knowledge gaps
+       - Knowledge gaps identified
     
-    4. Methodology and Quality Assessment
-       - Description of the research process
-       - Quality control measures applied
+    6. Visualizations
+       - Embed all generated visualizations
+       - Clear captions and interpretations
+    
+    7. Methodology and Quality Assessment
+       - Research process description
+       - Quality control measures
        - Limitations and biases
-       - Evidence hierarchy used
+       - Evidence hierarchy
     
-    5. Sources and Citations
+    8. Sources and Bibliography
        - Complete bibliography with metadata
        - Source credibility ratings
-       - Citation network visualization
+       - Citation network overview
     
-    6. Appendices
+    9. Appendices
        - Detailed evidence tables
        - Methodology reviews
        - Cross-reference matrices
     
-    Use clear, professional language. Make the report authoritative and accessible.
-    Include quality metrics throughout.
+    Use clear, professional language. Make the report authoritative yet accessible.
+    Include quality metrics throughout. Format in Markdown with proper headings.
   expected_output: >
-    A complete research report in Markdown format with:
-    - Executive summary with quality rating
+    An EnhancedDeepResearchReport in Markdown format with:
+    - Title and executive summary
+    - Table of contents
+    - Research plan summary
     - Detailed answers to research questions
     - Deep analysis sections with evidence ratings
+    - Embedded visualizations with captions
     - Methodology and quality assessment
     - Full source documentation with credibility scores
     - Evidence strength indicators throughout
-    - Appendices with supporting data
+    - Comprehensive appendices
     Save to file: research_report.md
   agent: report_composer
   output_file: research_report.md
+

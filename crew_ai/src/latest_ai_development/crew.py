@@ -34,7 +34,13 @@ from .schemas import (
     Analysis,
     QualityReport,
     RefinementReport,
-    DeepResearchReport
+    DeepResearchReport,
+    # New schemas for Gemini Deep Research
+    ResearchPlan,
+    ParallelResearchPathList,
+    VisualizationList,
+    IterativeRefinementDecision,
+    EnhancedDeepResearchReport
 )
 
 
@@ -128,6 +134,57 @@ class LatestAiDevelopment():
             verbose=True
         )
 
+    # New specialized agents for Gemini Deep Research
+
+    @agent
+    def query_expansion_specialist(self) -> Agent:
+        """Research planning and query expansion expert."""
+        return Agent(
+            config=self.agents_config['query_expansion_specialist'],
+            verbose=True
+        )
+
+    @agent
+    def web_search_specialist(self) -> Agent:
+        """Real-time web search and information discovery specialist."""
+        return Agent(
+            config=self.agents_config['web_search_specialist'],
+            tools=[
+                SerperSearchTool(),
+                WebScraperTool(),
+                EnhancedFirecrawlTool()
+            ],
+            verbose=True
+        )
+
+    @agent
+    def synthesis_expert(self) -> Agent:
+        """Multi-perspective synthesis and integration specialist."""
+        return Agent(
+            config=self.agents_config['synthesis_expert'],
+            verbose=True
+        )
+
+    @agent
+    def visualization_specialist(self) -> Agent:
+        """Data visualization and presentation expert."""
+        return Agent(
+            config=self.agents_config['visualization_specialist'],
+            verbose=True
+        )
+
+
+    # Tasks for Deep Research workflow
+
+
+    @task
+    def query_expansion_task(self) -> Task:
+        """Transform user query into multi-step research plan."""
+        return Task(
+            config=self.tasks_config['query_expansion_task'],
+            output_pydantic=ResearchPlan,
+            context=[]
+        )
 
     @task
     def discovery_task(self) -> Task:
@@ -237,11 +294,47 @@ class LatestAiDevelopment():
         )
 
     @task
+    def parallel_research_task(self) -> Task:
+        """Execute parallel research across multiple subtopics."""
+        return Task(
+            config=self.tasks_config['parallel_research_task'],
+            output_pydantic=ParallelResearchPathList,
+            async_execution=True,
+            context=[]
+        )
+
+    @task
+    def perspective_synthesis_task(self) -> Task:
+        """Synthesize findings from parallel research paths."""
+        return Task(
+            config=self.tasks_config['perspective_synthesis_task'],
+            context=[]
+        )
+
+    @task
+    def iterative_deepening_task(self) -> Task:
+        """Evaluate completeness and decide whether to continue research."""
+        return Task(
+            config=self.tasks_config['iterative_deepening_task'],
+            output_pydantic=IterativeRefinementDecision,
+            context=[]
+        )
+
+    @task
+    def visualization_generation_task(self) -> Task:
+        """Generate visualizations for key findings."""
+        return Task(
+            config=self.tasks_config['visualization_generation_task'],
+            output_pydantic=VisualizationList,
+            context=[]
+        )
+
+    @task
     def report_generation_task(self) -> Task:
         """Generate final research report."""
         return Task(
             config=self.tasks_config['report_generation_task'],
-            output_pydantic=DeepResearchReport,
+            output_pydantic=EnhancedDeepResearchReport,
             output_file='research_report.md',
             context=[]
         )
@@ -249,11 +342,12 @@ class LatestAiDevelopment():
 
     @crew
     def crew(self) -> Crew:
-        """Creates the Deep Research Crew (Full Pipeline)"""
+        """Creates the Deep Research Crew with Gemini Deep Research capabilities"""
         return Crew(
             agents=self.agents,
             tasks=self.tasks,
-            process=Process.sequential,
+            process=Process.hierarchical,  # Changed to hierarchical for better orchestration
+            manager_agent=self.research_lead(),  # Research lead orchestrates the workflow
             verbose=True,
             memory=True,
             embedder={
@@ -263,22 +357,27 @@ class LatestAiDevelopment():
         )
 
     def research_crew(self) -> Crew:
-        """Creates the Research Phase Crew"""
+        """Creates the Enhanced Research Phase Crew with parallel execution"""
         return Crew(
             tasks=[
+                self.query_expansion_task(),  # NEW: Multi-step planning
                 self.discovery_task(),
                 self.source_validation_task(),
+                self.parallel_research_task(),  # NEW: Parallel research paths
                 self.literature_mining_task(),
                 self.source_verification_task(),
                 self.claim_extraction_task(),
+                self.perspective_synthesis_task(),  # NEW: Synthesize parallel findings
                 self.methodology_review_task(),
                 self.cross_reference_task(),
                 self.evidence_evaluation_task(),
                 self.citation_validation_task(),
                 self.deep_analysis_task(),
-                self.quality_assurance_task()
+                self.quality_assurance_task(),
+                self.iterative_deepening_task()  # NEW: Decide if more research needed
             ],
-            process=Process.sequential,
+            process=Process.hierarchical,
+            manager_agent=self.research_lead(),
             verbose=True,
             memory=True
         )
@@ -293,9 +392,12 @@ class LatestAiDevelopment():
         )
 
     def report_crew(self) -> Crew:
-        """Creates the Reporting Phase Crew"""
+        """Creates the Enhanced Reporting Phase Crew with visualizations"""
         return Crew(
-            tasks=[self.report_generation_task()],
+            tasks=[
+                self.visualization_generation_task(),  # NEW: Generate visualizations
+                self.report_generation_task()
+            ],
             process=Process.sequential,
             verbose=True,
             memory=True
