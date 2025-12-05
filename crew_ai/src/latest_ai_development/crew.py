@@ -48,7 +48,6 @@ class LatestAiDevelopment():
     
     def __init__(self):
         """Initialize the crew with knowledge management."""
-        super().__init__()
         self.knowledge_manager = ResearchKnowledgeManager()
 
     @agent
