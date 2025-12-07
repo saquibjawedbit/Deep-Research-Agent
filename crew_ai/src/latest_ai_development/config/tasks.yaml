@@ -1,498 +1,113 @@
-# Enhanced Deep Research Tasks with Quality Control
-# New tasks for Gemini Deep Research capabilities
+# Streamlined Research Tasks - Optimized for 5-10 minute execution
+# Similar to Gemini Deep Research / GPT Deep Research workflow
 
-query_expansion_task:
+research_planning_task:
   description: >
-    Transform the user's research query "{query}" into a comprehensive, multi-step research plan.
+    Quickly analyze the research query "{query}" and create a focused research strategy.
     
-    Analyze the query to:
-    1. Identify the core research objective and underlying questions
-    2. Break down the query into 3-8 specific subtopics based on depth_level {depth_level}
-    3. For each subtopic, generate targeted search queries
-    4. Prioritize subtopics by importance and dependencies
-    5. Define search strategies (academic papers, news articles, expert blogs, videos, etc.)
-    6. Establish success criteria for research completeness
-    7. Estimate time and sources needed
+    Your goal is to:
+    1. Identify 3-5 core questions that need to be answered
+    2. Determine the most relevant source types (web articles, papers, videos, etc.)
+    3. Generate 5-8 targeted search queries
+    4. Set clear success criteria for what constitutes a complete answer
     
-    This plan will guide all subsequent research activities and enable parallel execution.
+    Keep the plan focused and actionable - we need to complete research in 5-10 minutes.
+    Prioritize high-impact sources and avoid getting lost in peripheral topics.
+    
+    Date range: {start_date} to {end_date}
+    Depth level: {depth_level} (1=quick overview, 3=balanced, 5=comprehensive)
   expected_output: >
-    A detailed ResearchPlan object with:
-    - Original query and refined research objective
-    - List of 3-8 ResearchSubtopic objects, each with:
-      * Title and description
-      * Specific search queries (3-5 per subtopic)
-      * Priority level (1-5)
-      * Estimated sources needed
-    - Overall search strategies
-    - Success criteria (measurable outcomes)
-    - Estimated duration in minutes
-    Format as JSON ResearchPlan object
-  agent: query_expansion_specialist
+    A concise research plan with:
+    - 3-5 key research questions
+    - 5-8 targeted search queries
+    - Prioritized source types
+    - Success criteria
+    Format as structured text or JSON
+  agent: research_planner
 
-
-discovery_task:
+information_gathering_task:
   description: >
-    Analyze the research query: "{query}"
+    Execute rapid web research based on the research plan for "{query}".
     
-    Break down the query into specific research questions, identify key concepts,
-    and determine the most relevant sources to investigate. Create a comprehensive research plan
-    that outlines which documents to prioritize and what key insights to look for.
+    Your mission:
+    1. Use the search queries from the research plan
+    2. Quickly identify and browse 10-15 high-quality sources
+    3. Extract key information, claims, and data points
+    4. Focus on authoritative sources (official docs, research papers, expert articles)
+    5. Capture source URLs and titles for citations
     
-    Consider the date range ({start_date} to {end_date}) and source types: {sources}
+    Work efficiently - aim to gather comprehensive information in 3-5 minutes.
+    Use web scraping and search tools to access multiple sources quickly.
     
-    Based on depth_level {depth_level}, adjust the scope:
-    - Level 1-2: Focus on 3-5 key questions and primary sources
-    - Level 3: Expand to 5-8 questions with secondary sources
-    - Level 4-5: Comprehensive coverage with 8-12 questions, tertiary sources, and edge cases
+    Max sources: {max_docs} (recommend 10-15 for speed)
   expected_output: >
-    A structured research plan with:
-    - 3-12 specific research questions (based on depth level)
-    - List of prioritized source types and search strategies
-    - Key concepts and entities to track
-    - Success criteria for the research
-    - Quality thresholds and validation requirements
-  agent: research_lead
+    A collection of key information including:
+    - 10-15 source summaries with URLs
+    - Key claims and findings from each source
+    - Important data points and quotes
+    - Source credibility indicators
+    Format as structured list of sources with extracted insights
+  agent: web_researcher
 
-source_validation_task:
+analysis_task:
   description: >
-    Before processing documents, validate their credibility and quality.
+    Rapidly analyze the gathered information to answer the research questions.
     
-    For each potential source, assess:
-    - Author credentials and institutional affiliations
-    - Publication venue reputation and peer review status
-    - Citation count and impact metrics
-    - Potential conflicts of interest or bias
-    - Methodological rigor (if applicable)
-    - Date of publication and currency of information
+    Your tasks:
+    1. Review all gathered sources and extracted information
+    2. Answer each of the 3-5 key research questions
+    3. Identify main themes and patterns across sources
+    4. Note areas of consensus and disagreement
+    5. Assess evidence quality (strong/moderate/weak)
+    6. Flag any significant knowledge gaps
     
-    Only sources meeting quality_threshold {quality_threshold} should proceed to literature mining.
-    Flag sources with potential issues for special scrutiny.
+    Focus on synthesizing insights quickly without getting bogged down in details.
+    Prioritize clear, evidence-backed conclusions.
   expected_output: >
-    A validated source list with:
-    - Source ID and metadata
-    - Credibility score (0.0-1.0)
-    - Quality assessment notes
-    - Identified biases or limitations
-    - Recommendation (accept/review/reject)
-    Format as JSON list of SourceValidation objects
-  agent: data_validator
-
-literature_mining_task:
-  description: >
-    Based on the research plan and validated sources, find and process relevant documents about "{query}".
-    
-    Use the PDF parser and web scraper tools to extract structured information from
-    up to {max_docs} documents. For each document, extract:
-    - Title, authors, and metadata
-    - Abstract and key sections (methods, results, conclusions)
-    - Citations and references
-    - Datasets and code repositories mentioned
-    - Statistical data and key findings
-    
-    Focus on high-quality sources published between {start_date} and {end_date}.
-    Enrich metadata with publication metrics and credibility indicators.
-  expected_output: >
-    A collection of structured documents with:
-    - Full metadata and provenance
-    - Extracted sections and content
-    - Citations and references
-    - Identified datasets and code links
-    - Source quality score
-    Format as JSON list of Document objects
-  agent: literature_miner
-
-source_verification_task:
-  description: >
-    Take the raw data gathered from the Web and YouTube. 
-    1. Check for consistency: Does the YouTube video transcript match the web article?
-    2. Rank sources by credibility (e.g., Official documentation > Random blog).
-    3. Discard any data that lacks a clear author or publication date.
-  expected_output: >
-    A verified data report with:
-    - List of verified sources and their credibility scores
-    - List of discarded sources and reasons
-    - Consistency checks between different source types
-    - Final ranked list of data for analysis
-  agent: data_validator
-
-claim_extraction_task:
-  description: >
-    Extract key insights, arguments, and data from the processed documents.
-    
-    Analyze each document's content and identify:
-    - Key arguments and theoretical positions
-    - Empirical findings and statistical data
-    - Methodological innovations
-    - Contradictions or agreements with other sources
-    
-    For each insight, capture:
-    - The exact text with context
-    - Type of insight (empirical, theoretical, methodological)
-    - Provenance (source, page, section)
-    - Confidence level based on evidence strength
-    - Supporting and contradicting evidence
-  expected_output: >
-    A list of extracted insights with full provenance:
-    - Insight ID and text
-    - Insight type
-    - Source document and location
-    - Context from surrounding text
-    - Confidence score (0.0-1.0)
-    - Evidence strength rating
-    Format as JSON list of Insight objects
-  agent: literature_miner
-
-methodology_review_task:
-  description: >
-    Critically evaluate the research methodologies used in the source materials.
-    
-    For each source that presents empirical research:
-    - Assess the appropriateness of the research design
-    - Evaluate sample size, selection, and representativeness
-    - Identify potential confounding variables
-    - Review statistical methods and their validity
-    - Check for common methodological pitfalls
-    - Rate the overall methodological rigor
-    
-    Provide constructive critique that helps contextualize findings.
-  expected_output: >
-    Methodology assessments including:
-    - Source ID and study type
-    - Methodological strengths
-    - Methodological limitations
-    - Potential confounds or biases
-    - Rigor score (0.0-1.0)
-    - Impact on reliability of findings
-    Format as JSON list of MethodologyReview objects
-  agent: methodology_critic
-
-cross_reference_task:
-  description: >
-    Cross-verify claims across multiple independent sources.
-    
-    For each major claim extracted:
-    - Identify all sources that address the claim
-    - Determine if sources agree, disagree, or provide nuance
-    - Calculate consensus level across sources
-    - Identify outlier claims with limited support
-    - Flag contradictions that need resolution
-    
-    Only enabled if enable_fact_checking is {enable_fact_checking}.
-    Require minimum {min_sources_per_claim} sources per claim.
-  expected_output: >
-    Cross-reference analysis with:
-    - Claim ID and text
-    - List of supporting sources
-    - List of contradicting sources
-    - Consensus level (0.0-1.0)
-    - Reliability rating
-    - Notes on contradictions
-    Format as JSON list of CrossReference objects
-  agent: cross_reference_specialist
-
-evidence_evaluation_task:
-  description: >
-    Rate the strength and reliability of evidence for each claim.
-    
-    Apply evidence hierarchy principles:
-    - Systematic reviews and meta-analyses (highest)
-    - Randomized controlled trials
-    - Cohort studies
-    - Case-control studies
-    - Cross-sectional studies
-    - Case reports and expert opinion (lowest)
-    
-    For each claim, assess:
-    - Type of evidence
-    - Sample size and statistical power
-    - Effect size and practical significance
-    - Consistency across studies
-    - Directness of evidence
-  expected_output: >
-    Evidence strength ratings:
-    - Claim ID
-    - Evidence type
-    - Strength rating (A/B/C/D/F)
-    - Statistical significance
-    - Practical importance
-    - Confidence interval
-    - Notes and caveats
-    Format as JSON list of EvidenceRating objects
-  agent: evidence_evaluator
-
-citation_validation_task:
-  description: >
-    Validate all citations and build a comprehensive citation network.
-    
-    For each citation:
-    - Verify the citation is accurate and complete
-    - Check if the cited source actually supports the claim
-    - Identify citation cascades (unchecked propagation)
-    - Build citation graph showing relationships
-    - Flag potential citation errors or misrepresentations
-    
-    Ensure all claims in the final report are properly attributed.
-  expected_output: >
-    Citation validation report:
-    - Total citations processed
-    - Citation accuracy rate
-    - Identified citation errors
-    - Citation network graph
-    - Provenance chain for each claim
-    Format as JSON CitationReport object
-  agent: citation_expert
-
-deep_analysis_task:
-  description: >
-    Analyze the extracted insights to identify trends, patterns, and underlying themes.
-    
-    Synthesize the information to answer the research questions:
-    1. Identify consensus and dissensus among sources
-    2. Connect dots between disparate pieces of information
-    3. Evaluate the strength of evidence for different claims
-    4. Construct a coherent narrative or argument
-    5. Identify knowledge gaps and areas needing more research
-    6. Assess bias patterns across sources
-    7. Evaluate the overall quality of the evidence base
-    
-    Incorporate methodology reviews, cross-references, and evidence ratings.
-  expected_output: >
-    A synthesized analysis of the topic including:
-    - Key themes and patterns
-    - Areas of agreement and disagreement
-    - Critical evaluation of the evidence
-    - Strategic insights and implications
-    - Knowledge gaps identified
-    - Bias assessment
-    - Overall evidence quality rating
-    Format as a structured Analysis object
-  agent: senior_analyst
-
-quality_assurance_task:
-  description: >
-    Perform final quality check before report generation.
-    
-    Verify:
-    - All research questions have been addressed
-    - Claims are supported by adequate evidence (min {min_sources_per_claim} sources)
-    - Citations are accurate and complete
-    - Methodological limitations are acknowledged
-    - Biases are identified and discussed
-    - Evidence strength is clearly communicated
-    - Quality threshold {quality_threshold} is met
-    
-    If quality standards are not met and enable_iterative_refinement is {enable_iterative_refinement},
-    identify gaps and recommend additional research.
-  expected_output: >
-    Quality assurance report:
-    - Overall quality score (0.0-1.0)
-    - Research questions coverage
-    - Evidence adequacy assessment
-    - Citation completeness
-    - Identified gaps or weaknesses
-    - Recommendations for improvement
-    - Pass/fail decision
-    Format as QualityReport object
-  agent: data_validator
-
-iterative_refinement_task:
-  description: >
-    If quality assurance identifies gaps, conduct targeted additional research.
-    
-    Only runs if enable_iterative_refinement is {enable_iterative_refinement} and
-    quality score is below threshold.
-    
-    Focus on:
-    - Unanswered research questions
-    - Claims with insufficient evidence
-    - Contradictions needing resolution
-    - Missing perspectives or sources
-    
-    Maximum {max_iterations} iterations to prevent infinite loops.
-  expected_output: >
-    Refinement report:
-    - Iteration number
-    - Gaps addressed
-    - Additional sources found
-    - New insights extracted
-    - Updated quality score
-    - Continue/complete decision
-    Format as RefinementReport object
-  agent: research_lead
-
-# New tasks for parallel execution and synthesis
-
-parallel_research_task:
-  description: >
-    Execute parallel research across multiple subtopics from the research plan.
-    
-    For each subtopic in the research plan:
-    1. Execute the specific search queries defined for that subtopic
-    2. Browse and analyze relevant sources (aim for {max_docs} sources per subtopic)
-    3. Extract key insights and findings specific to this subtopic
-    4. Document all sources with full metadata
-    5. Track completion status (completed/partial/failed)
-    
-    Work autonomously and efficiently, following the search strategies from the research plan.
-    Focus on finding authoritative, current, and diverse sources.
-  expected_output: >
-    A ParallelResearchPathList with one ParallelResearchPath per subtopic:
-    - Path ID and subtopic name
-    - Number of sources found
-    - Key insights extracted (3-10 per path)
-    - List of Document objects with full metadata
-    - Completion status
-    Format as JSON ParallelResearchPathList object
-  agent: web_search_specialist
-  async_execution: true
-
-perspective_synthesis_task:
-  description: >
-    Synthesize findings from all parallel research paths into a unified understanding.
-    
-    Analyze the results from parallel_research_task to:
-    1. Identify common themes and patterns across different subtopics
-    2. Resolve contradictions by finding deeper truths or contextual differences
-    3. Connect insights from different research paths
-    4. Identify unique perspectives that only emerged from specific paths
-    5. Create an integrated narrative that combines all perspectives
-    6. Highlight areas where multiple paths reinforce the same conclusions
-    7. Note areas of uncertainty or conflicting information
-    
-    The goal is to create a coherent whole that is greater than the sum of its parts.
-  expected_output: >
-    A comprehensive synthesis including:
-    - Integrated key findings (combining all research paths)
-    - Common themes identified across paths
-    - Resolved contradictions with explanations
-    - Unique insights from each path
-    - Areas of strong consensus
-    - Areas of uncertainty or conflict
-    - Overall narrative connecting all findings
-    Format as structured text with clear sections
-  agent: synthesis_expert
-
-iterative_deepening_task:
-  description: >
-    Evaluate research completeness and decide whether to continue or complete.
-    
-    Review the quality assurance report and synthesized findings to determine:
-    1. Are all research questions adequately answered?
-    2. Is the evidence sufficient and high-quality (meets quality_threshold {quality_threshold})?
-    3. Are there significant knowledge gaps that need addressing?
-    4. Are there contradictions that need resolution?
-    5. Would additional research significantly improve the output?
-    
-    If enable_iterative_refinement is {enable_iterative_refinement} and quality is below threshold:
-    - Identify specific gaps and formulate new targeted queries
-    - Recommend additional research cycles (max {max_iterations} total iterations)
-    
-    Otherwise, approve proceeding to final report generation.
-  expected_output: >
-    An IterativeRefinementDecision with:
-    - should_continue: boolean decision
-    - reason: explanation for the decision
-    - identified_gaps: list of specific gaps if continuing
-    - additional_queries: new search queries if continuing
-    - current_quality_score: overall quality assessment
-    Format as JSON IterativeRefinementDecision object
-  agent: research_lead
-
-visualization_generation_task:
-  description: >
-    Create compelling visualizations of key research findings.
-    
-    Analyze the synthesized findings and generate visualizations for:
-    1. Comparative data (bar charts, comparison tables)
-    2. Trends over time (line graphs, timelines)
-    3. Relationships and connections (network diagrams for citations/concepts)
-    4. Concept hierarchies (mind maps, tree diagrams)
-    5. Statistical summaries (tables with key metrics)
-    
-    For each visualization:
-    - Choose the most appropriate visualization type
-    - Structure the data clearly
-    - Provide descriptive titles and captions
-    - Ensure visualizations enhance understanding
-    
-    Aim for 3-7 high-impact visualizations that illuminate key insights.
-  expected_output: >
-    A VisualizationList with 3-7 Visualization objects:
-    - Unique viz_id
-    - viz_type (chart/graph/network/mindmap/table)
-    - Descriptive title
-    - Explanation of what it shows
-    - Structured data for rendering
-    - Optional file path if image generated
-    Format as JSON VisualizationList object
-  agent: visualization_specialist
+    A structured analysis containing:
+    - Answers to each research question with supporting evidence
+    - Main themes and patterns identified
+    - Areas of consensus/disagreement
+    - Evidence quality assessment
+    - Key insights and takeaways
+    Format as organized sections with clear headings
+  agent: insight_analyst
 
 report_generation_task:
   description: >
-    Create a comprehensive, multi-page research report synthesizing all findings.
+    Create a clear, professional research report synthesizing all findings about "{query}".
     
-    The report should be structured like a professional research publication:
+    Structure the report as follows:
     
-    1. Title and Executive Summary
-       - Compelling title reflecting the research scope
-       - High-level overview (2-3 paragraphs)
-       - Key takeaways and strategic insights
-       - Overall evidence quality rating
+    1. **Executive Summary** (2-3 paragraphs)
+       - Quick overview of the topic
+       - Main findings and conclusions
+       - Key takeaways
     
-    2. Table of Contents
-       - Clear navigation structure
+    2. **Research Questions & Answers**
+       - Each question with detailed answer
+       - Supporting evidence and citations
+       - Confidence level (high/medium/low)
     
-    3. Research Plan Summary
-       - Original query and research objective
-       - Subtopics investigated
-       - Methodology overview
+    3. **Key Insights & Analysis**
+       - Major themes and patterns
+       - Important trends or developments
+       - Areas of debate or uncertainty
     
-    4. Research Questions and Answers
-       - Each question with comprehensive answer
-       - Evidence strength indicators
-       - Citations for all claims
+    4. **Sources**
+       - List of all sources with URLs
+       - Brief credibility assessment
     
-    5. In-Depth Analysis
-       - Detailed exploration of key themes
-       - Multi-perspective synthesis
-       - Discussion of implications
-       - Knowledge gaps identified
-    
-    6. Visualizations
-       - Embed all generated visualizations
-       - Clear captions and interpretations
-    
-    7. Methodology and Quality Assessment
-       - Research process description
-       - Quality control measures
-       - Limitations and biases
-       - Evidence hierarchy
-    
-    8. Sources and Bibliography
-       - Complete bibliography with metadata
-       - Source credibility ratings
-       - Citation network overview
-    
-    9. Appendices
-       - Detailed evidence tables
-       - Methodology reviews
-       - Cross-reference matrices
-    
-    Use clear, professional language. Make the report authoritative yet accessible.
-    Include quality metrics throughout. Format in Markdown with proper headings.
+    Keep the report concise but comprehensive - aim for 1500-3000 words.
+    Use clear headings, bullet points, and citations throughout.
+    Write in professional but accessible language.
   expected_output: >
-    An EnhancedDeepResearchReport in Markdown format with:
-    - Title and executive summary
-    - Table of contents
-    - Research plan summary
+    A complete research report in Markdown format with:
+    - Executive summary
     - Detailed answers to research questions
-    - Deep analysis sections with evidence ratings
-    - Embedded visualizations with captions
-    - Methodology and quality assessment
-    - Full source documentation with credibility scores
-    - Evidence strength indicators throughout
-    - Comprehensive appendices
+    - Key insights and analysis
+    - Full source bibliography
     Save to file: research_report.md
-  agent: report_composer
+  agent: report_writer
   output_file: research_report.md
 
