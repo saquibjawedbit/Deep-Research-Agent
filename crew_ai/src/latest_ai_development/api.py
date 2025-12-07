@@ -145,24 +145,16 @@ async def stream_research(
             await asyncio.sleep(0.5)
             
             # Map task names to agent names for better status messages
-            task_agent_map = {
-                "discovery_task": "Principal Investigator",
-                "source_validation_task": "Data Validator",
-                "literature_mining_task": "Literature Miner",
-                "claim_extraction_task": "Literature Miner",
-                "methodology_review_task": "Methodology Critic",
-                "cross_reference_task": "Cross-Reference Specialist",
-                "evidence_evaluation_task": "Evidence Evaluator",
-                "citation_validation_task": "Citation Expert",
-                "deep_analysis_task": "Senior Analyst",
-                "quality_assurance_task": "Data Validator",
-                "iterative_refinement_task": "Principal Investigator",
-                "report_generation_task": "Report Composer"
+            task_to_agent = {
+                "research_planning_task": "Research Planner",
+                "information_gathering_task": "Web Researcher",
+                "analysis_task": "Insight Analyst",
+                "report_generation_task": "Report Writer"
             }
             
             # Create a custom callback to track task progress
             task_count = 0
-            total_tasks = 12
+            total_tasks = 4  # Updated to reflect streamlined workflow
             
             async def task_progress_callback(task_output):
                 nonlocal task_count
@@ -194,80 +186,41 @@ async def stream_research(
             # Execute Research Phase
             await status_queue.put({
                 "type": "execution_started",
-                "message": "Phase 1: Research & Analysis",
+                "message": "Starting Deep Research",
                 "agent": "System"
             })
             
-            research_crew = crew_instance.research_crew()
+            research_crew = crew_instance.crew()
             # Add callbacks
             for task in research_crew.tasks:
                 task.callback = sync_callback_wrapper
                 
             research_result = await loop.run_in_executor(None, lambda: research_crew.kickoff(inputs=inputs))
             
-            # Check Quality
-            quality_report = research_result.pydantic
-            quality_score = quality_report.overall_quality_score if quality_report else 0.0
-            
             await status_queue.put({
-                "type": "quality_check",
-                "message": f"Quality Score: {quality_score:.2f} (Threshold: {inputs.get('quality_threshold', 0.7)})",
-                "score": quality_score,
+                "type": "execution_completed",
+                "message": "Research completed successfully",
                 "agent": "System"
             })
-            
-            # Iterative Refinement Loop
-            if inputs.get('enable_iterative_refinement') and quality_score < inputs.get('quality_threshold', 0.7):
-                max_iterations = inputs.get('max_iterations', 2)
-                current_iteration = 0
-                
-                while current_iteration < max_iterations and quality_score < inputs.get('quality_threshold', 0.7):
-                    current_iteration += 1
-                    await status_queue.put({
-                        "type": "refinement_start",
-                        "message": f"Phase 2: Refinement Iteration {current_iteration}/{max_iterations}. Addressing gaps...",
-                        "agent": "System"
-                    })
-                    
-                    # Prepare inputs for refinement (pass the quality report details)
-                    refinement_inputs = inputs.copy()
-                    refinement_inputs['quality_report'] = quality_report.model_dump() if quality_report else {}
-                    
-                    refinement_crew = crew_instance.refinement_crew()
-                    for task in refinement_crew.tasks:
-                        task.callback = sync_callback_wrapper
-                        
-                    refinement_result = await loop.run_in_executor(None, lambda: refinement_crew.kickoff(inputs=refinement_inputs))
-                    
-                    # Update quality score (assuming refinement returns a report with updated score)
-                    # Note: Refinement task returns RefinementReport, which has updated_quality_score
-                    refinement_report = refinement_result.pydantic
-                    if refinement_report:
-                        quality_score = refinement_report.updated_quality_score
-                        await status_queue.put({
-                            "type": "refinement_complete",
-                            "message": f"Refinement complete. New Quality Score: {quality_score:.2f}",
-                            "agent": "System"
-                        })
-            
-            # Generate Final Report
-            await status_queue.put({
-                "type": "report_generation",
-                "message": "Phase 3: Generating Final Report",
-                "agent": "System"
-            })
-            
-            report_crew = crew_instance.report_crew()
-            for task in report_crew.tasks:
-                task.callback = sync_callback_wrapper
-                
-            final_result = await loop.run_in_executor(None, lambda: report_crew.kickoff(inputs=inputs))
 
-            # Send completion status
+            # Read the generated markdown report file
+            report_content = ""
+            report_path = "research_report.md"
+            try:
+                if os.path.exists(report_path):
+                    with open(report_path, 'r', encoding='utf-8') as f:
+                        report_content = f.read()
+                else:
+                    report_content = "Report file not found. Using raw output:\n\n" + str(research_result.raw)
+            except Exception as e:
+                report_content = f"Error reading report: {str(e)}\n\nRaw output:\n{str(research_result.raw)}"
+
+            # Send completion status with actual report content
             await status_queue.put({
                 "type": "completed",
-                "message": "Deep research complete! Generated comprehensive report with quality metrics.",
-                "result": str(final_result),
+                "message": "Deep research complete! Generated comprehensive report.",
+                "result": report_content,
+                "report_path": report_path,
                 "agent": "System"
             })
             
