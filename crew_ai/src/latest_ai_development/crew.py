@@ -7,7 +7,6 @@ from typing import List
 from .tools.ingestion.web_scraper import WebScraperTool
 from .tools.ingestion.advanced_search import SerperSearchTool
 from .tools.ingestion.firecrawl_scraper import EnhancedFirecrawlTool
-from .tools.output.report_generator import ReportGeneratorTool
 
 # Import knowledge manager
 from .utils.knowledge_manager import ResearchKnowledgeManager
@@ -59,7 +58,6 @@ class LatestAiDevelopment():
         """Concise research communicator."""
         return Agent(
             config=self.agents_config['report_writer'],
-            tools=[ReportGeneratorTool()],
             verbose=True
         )
 

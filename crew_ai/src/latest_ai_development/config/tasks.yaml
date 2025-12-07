@@ -84,17 +84,24 @@ report_generation_task:
        - Main findings and conclusions
        - Key takeaways
     
-    2. **Research Questions & Answers**
+    3. Go in depth on each research question:
+       and provide detailed answers.
+    
+    4. Tell me your findings and go deep.
+
+    5. Answer users questions.
+    
+    6. **Research Questions & Answers**
        - Each question with detailed answer
        - Supporting evidence and citations
        - Confidence level (high/medium/low)
     
-    3. **Key Insights & Analysis**
+    7. **Key Insights & Analysis**
        - Major themes and patterns
        - Important trends or developments
        - Areas of debate or uncertainty
     
-    4. **Sources**
+    8. **Sources**
        - List of all sources with URLs
        - Brief credibility assessment
     

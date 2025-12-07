@@ -31,18 +31,6 @@ class SerperSearchTool(BaseTool):
     name: str = "serper_search"
     description: str = "Search the web using SerperDev API to find relevant URLs and information. Returns search results with titles, links, and snippets."
     
-    def __init__(self, **kwargs):
-        """Initialize the search tool."""
-        super().__init__(**kwargs)
-        
-        # Check for API key
-        self.api_key = os.getenv("SERPER_API_KEY")
-        if not self.api_key:
-            raise ValueError(
-                "SERPER_API_KEY not found in environment variables. "
-                "Get your API key from https://serper.dev and add it to your .env file."
-            )
-    
     def _run(self, query: str, num_results: int = 10) -> str:
         """
         Execute a web search using Serper API.
@@ -54,11 +42,16 @@ class SerperSearchTool(BaseTool):
         Returns:
             Formatted string with search results
         """
+        # Get API key from environment
+        api_key = os.getenv("SERPER_API_KEY")
+        if not api_key:
+            return "Error: SERPER_API_KEY not found in environment variables. Get your API key from https://serper.dev"
+        
         try:
             # Make direct API call to Serper
             url = "https://google.serper.dev/search"
             headers = {
-                "X-API-KEY": self.api_key,
+                "X-API-KEY": api_key,
                 "Content-Type": "application/json"
             }
             payload = {
