@@ -1,12 +1,12 @@
 """Advanced search tools using SerperDev API for web search."""
 
-from typing import Any, Dict, Type, Optional
-from pydantic import BaseModel, Field
+from typing import  Optional
+from pydantic import Field
 import os
 import requests
-from crewai_tools import BaseTool
+from crewai.tools import BaseTool
 
-from ..base import BaseResearchTool, ResearchToolInput
+from ..base import ResearchToolInput
 
 
 class AdvancedSearchInput(ResearchToolInput):
