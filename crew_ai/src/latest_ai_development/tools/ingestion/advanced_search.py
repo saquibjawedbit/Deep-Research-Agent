@@ -3,7 +3,8 @@
 from typing import Any, Dict, Type, Optional
 from pydantic import BaseModel, Field
 import os
-from crewai_tools import SerperDevTool
+import requests
+from crewai_tools import BaseTool
 
 from ..base import BaseResearchTool, ResearchToolInput
 
@@ -15,96 +16,91 @@ class AdvancedSearchInput(ResearchToolInput):
     search_type: str = Field(default="search", description="Type of search: search, news, images")
 
 
-class SerperSearchTool(BaseResearchTool):
+class SerperSearchTool(BaseTool):
     """
-    Wrapper for SerperDev search tool with enhanced error handling.
+    Direct implementation of Serper search with better error handling.
     
     Features:
     - Web search using SerperDev API
     - Configurable result count
     - Multiple search types (web, news, images)
     - Automatic API key detection from environment
-    - Graceful error handling
+    - Direct API calls for reliability
     """
     
     name: str = "serper_search"
-    description: str = "Search the web using SerperDev API to find relevant URLs and information"
-    args_schema: Type[BaseModel] = AdvancedSearchInput
+    description: str = "Search the web using SerperDev API to find relevant URLs and information. Returns search results with titles, links, and snippets."
     
     def __init__(self, **kwargs):
         """Initialize the search tool."""
         super().__init__(**kwargs)
         
         # Check for API key
-        api_key = os.getenv("SERPER_API_KEY")
-        if not api_key:
+        self.api_key = os.getenv("SERPER_API_KEY")
+        if not self.api_key:
             raise ValueError(
                 "SERPER_API_KEY not found in environment variables. "
                 "Get your API key from https://serper.dev and add it to your .env file."
             )
-        
-        # Initialize the underlying SerperDev tool
-        self._serper_tool = SerperDevTool(
-            search_url="https://google.serper.dev/search",
-            n_results=10
-        )
     
-    def execute(
-        self, 
-        query: str, 
-        num_results: int = 10,
-        search_type: str = "search"
-    ) -> Dict[str, Any]:
+    def _run(self, query: str, num_results: int = 10) -> str:
         """
-        Execute a web search.
+        Execute a web search using Serper API.
         
         Args:
             query: Search query to execute
             num_results: Number of results to return (default: 10)
-            search_type: Type of search - 'search', 'news', or 'images'
             
         Returns:
-            Dictionary containing search results with URLs, titles, and snippets
+            Formatted string with search results
         """
         try:
-            # Execute search using the underlying tool
-            # The SerperDevTool returns a string with search results
-            results_str = self._serper_tool.run(search_query=query)
-            
-            # Parse the results (SerperDev returns formatted text)
-            # In a production environment, you might want to parse this more thoroughly
-            return {
-                "query": query,
-                "results": results_str,
-                "num_results": num_results,
-                "search_type": search_type,
-                "status": "success"
+            # Make direct API call to Serper
+            url = "https://google.serper.dev/search"
+            headers = {
+                "X-API-KEY": self.api_key,
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "q": query,
+                "num": num_results
             }
             
+            response = requests.post(url, json=payload, headers=headers, timeout=30)
+            response.raise_for_status()
+            
+            data = response.json()
+            
+            # Format results
+            results = []
+            if "organic" in data:
+                for idx, result in enumerate(data["organic"][:num_results], 1):
+                    title = result.get("title", "No title")
+                    link = result.get("link", "No link")
+                    snippet = result.get("snippet", "No description")
+                    results.append(f"{idx}. {title}\n   URL: {link}\n   {snippet}\n")
+            
+            if not results:
+                return f"No results found for query: {query}"
+            
+            output = f"Search results for '{query}':\n\n"
+            output += "\n".join(results)
+            return output
+            
+        except requests.exceptions.RequestException as e:
+            error_msg = f"Serper API request failed: {str(e)}"
+            if hasattr(e, 'response') and e.response is not None:
+                error_msg += f"\nStatus: {e.response.status_code}"
+                try:
+                    error_msg += f"\nResponse: {e.response.json()}"
+                except:
+                    error_msg += f"\nResponse: {e.response.text}"
+            return error_msg
         except Exception as e:
-            return {
-                "query": query,
-                "results": None,
-                "error": str(e),
-                "status": "error",
-                "message": f"Search failed: {str(e)}"
-            }
-    
-    def _run(self, query: str) -> str:
-        """
-        CrewAI tool interface - simplified run method.
-        
-        Args:
-            query: Search query
-            
-        Returns:
-            Search results as string
-        """
-        result = self.execute(query=query)
-        if result["status"] == "success":
-            return result["results"]
-        else:
-            return f"Search error: {result.get('message', 'Unknown error')}"
+            return f"Search error: {str(e)}"
+            return error_msg
+        except Exception as e:
+            return f"Search error: {str(e)}"
 
 
 def create_search_tool(api_key: Optional[str] = None) -> SerperSearchTool:
